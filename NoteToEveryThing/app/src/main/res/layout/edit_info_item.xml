@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@color/bg_item_title"
+    android:visibility="gone"
+    android:id="@+id/ll_edit_info_note"
+    >
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:paddingLeft="5dp"
+        android:layout_marginTop="10dp"
+        >
+
+        <EditText
+            android:id="@+id/ed_title_note"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Title note"
+            android:textColor="@color/color_primary_text"
+            android:textStyle="bold"
+            android:textSize="20sp" />
+
+        <EditText
+            android:id="@+id/ed_content_note"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="5dp"
+            android:layout_marginBottom="5dp"
+            android:text="Content note"
+            android:textColor="@color/color_primary_text"
+            android:textSize="12sp" />
+        <RelativeLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="10dp"
+            >
+
+            <TextView
+                android:id="@+id/tv_location"
+                android:gravity="center_vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawablePadding="2dp"
+                android:text="Place"
+                android:drawableLeft="@drawable/ic_location"
+                android:textSize="10sp"
+                />
+
+            <TextView
+                android:id="@+id/tv_wifi_info"
+                android:layout_toRightOf="@id/tv_location"
+                android:gravity="center_vertical"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:text="My wifi"
+                android:textSize="10sp"
+                android:drawablePadding="2dp"
+                android:drawableLeft="@drawable/ic_wifi"
+                />
+
+            <TextView
+                android:id="@+id/tv_gps_info"
+                android:layout_toRightOf="@id/tv_wifi_info"
+                android:gravity="center_vertical"
+                android:layout_width="wrap_content"
+                android:layout_marginLeft="5dp"
+                android:layout_height="wrap_content"
+                android:text="GPS"
+                android:textSize="10sp"
+                android:drawablePadding="2dp"
+                android:drawableLeft="@drawable/ic_gps"
+                />
+        </RelativeLayout>
+        <Button
+            android:layout_marginRight="10dp"
+            android:id="@+id/ib_save"
+            android:background="@drawable/shape_action_bar"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Save"
+            android:layout_gravity="end|center"/>
+    </LinearLayout>
+</LinearLayout>

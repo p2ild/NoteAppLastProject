@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="horizontal" android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:id="@+id/action_bar"
+    android:background="@drawable/shape_action_bar"
+    android:padding="10dp"
+    >
+
+    <TextView
+        android:id="@+id/tv_title_action_bar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="All note"
+        android:paddingLeft="20dp"
+        android:textColor="@color/text_light"
+        android:textSize="30sp"
+        />
+
+</LinearLayout>

@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/rl_float_option"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:visibility="visible">
+
+    <ImageButton
+        android:id="@+id/ib_alarm"
+        android:layout_marginBottom="10dp"
+        android:layout_marginLeft="-20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@+id/ib_pencil"
+        android:background="@color/color_tranparent"
+        android:src="@drawable/ic_alarm_clock" />
+
+    <ImageButton
+        android:id="@+id/ib_pencil"
+        android:layout_marginTop="-15dp"
+        android:layout_marginRight="35dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/ib_alarm"
+        android:background="@color/color_tranparent"
+        android:src="@drawable/ic_pencil" />
+
+    <ImageButton
+        android:id="@+id/ib_recycling"
+        android:layout_marginTop="50dp"
+        android:layout_marginLeft="30dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/ib_alarm"
+        android:layout_toRightOf="@id/ib_alarm"
+        android:background="@color/color_tranparent"
+        android:src="@drawable/ic_recycling" />
+    <ImageButton
+        android:id="@+id/ib_share"
+        android:layout_marginTop="-25dp"
+        android:layout_marginLeft="20dp"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/ib_alarm"
+        android:layout_toRightOf="@id/ib_alarm"
+        android:background="@color/color_tranparent"
+        android:src="@drawable/ic_share" />
+
+    <ImageButton
+        android:id="@+id/ib_long_click"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/ib_alarm"
+        android:layout_marginTop="20dp"
+        android:layout_toLeftOf="@id/ib_recycling"
+        android:layout_toRightOf="@id/ib_pencil"
+        android:background="@color/color_tranparent"
+        android:src="@drawable/ic_long_click" />
+
+</RelativeLayout>
