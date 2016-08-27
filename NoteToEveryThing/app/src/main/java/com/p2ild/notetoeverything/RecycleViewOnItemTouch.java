@@ -52,8 +52,6 @@ public class RecycleViewOnItemTouch implements RecyclerView.OnItemTouchListener 
             onItemClick.onActionFocus(e.getRawX(),e.getRawY());
         }
 
-//        Log.d(TAG,"motionEvent: "+e);
-//        Log.d(TAG, "onInterceptTouchEvent: " + gestureDetector.onTouchEvent(e));
         return false;
     }
 

@@ -83,7 +83,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
             Log.d(TAG, "backupImageNote: File:" + file1.getPath());
             try {
                 input = new FileInputStream(file1);
-                output = new FileOutputStream(path + "/"+file1.getName());
+                output = new FileOutputStream(path + "/" + file1.getName());
                 byte[] b = new byte[1024];
                 int length;
                 while ((length = input.read(b)) != -1) {
@@ -167,8 +167,8 @@ public class DatabaseManager extends SQLiteOpenHelper {
     public void insert(String titleNote, String contentNote, String imgPath, String imgThumbnailPath) {
         openDb();
         String sql = "INSERT INTO " + TABLE_NAME + " VALUES("
-                + "'" + titleNote + "'" + ","
-                + "'" + contentNote + "'" + ","
+                + "'" + replaceCharApostrophe(titleNote) + "'" + ","
+                + "'" + replaceCharApostrophe(contentNote) + "'" + ","
                 + "'" + imgPath + "'" + ","
                 + "'" + imgThumbnailPath + "'"
                 + ")";
@@ -178,21 +178,30 @@ public class DatabaseManager extends SQLiteOpenHelper {
 
     public void update(String oldTitle, String titleNote, String contentNote) {
         openDb();
-        Log.d(TAG, "oldTitle= " + oldTitle);
-        Log.d(TAG, "titleNote= " + titleNote);
-        Log.d(TAG, "contentNote= " + contentNote);
         String sql = "UPDATE " + TABLE_NAME + " SET "
-                + "" + NAME_COLUMN_TITLE_NOTE + " ='" + titleNote + "',"
-                + "" + NAME_COLUMN_CONTENT_NOTE + " ='" + contentNote + "'"
-                + " WHERE " + NAME_COLUMN_TITLE_NOTE + "='" + oldTitle + "'";
+                + "" + NAME_COLUMN_TITLE_NOTE + " ='" + replaceCharApostrophe(titleNote) + "',"
+                + "" + NAME_COLUMN_CONTENT_NOTE + " ='" + replaceCharApostrophe(contentNote) + "'"
+                + " WHERE " + NAME_COLUMN_TITLE_NOTE + "='" + replaceCharApostrophe(oldTitle) + "'";
         db.execSQL(sql);
         closeDb();
     }
 
     public void deleteNote(String noteTitleDelete) {
         openDb();
-        String sql = "DELETE FROM " + TABLE_NAME + " WHERE " + NAME_COLUMN_TITLE_NOTE + "='" + noteTitleDelete + "'";
+        String sql = "DELETE FROM " + TABLE_NAME + " WHERE " + NAME_COLUMN_TITLE_NOTE + "='" + replaceCharApostrophe(noteTitleDelete) + "'";
         db.execSQL(sql);
         closeDb();
+    }
+
+    private String replaceCharApostrophe(String str) {
+        String result = str;
+        Log.d(TAG, "replaceCharApostrophe: result:"+ result);
+        if (str!=null && str.contains("'")) {
+            str = str.replace("'", "''");
+            Log.d(TAG, "replaceCharApostrophe: str"+str);
+            return str;
+        }else {
+            return result;
+        }
     }
 }

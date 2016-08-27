@@ -10,6 +10,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.bumptech.glide.Priority;
 
 import java.io.File;
 
@@ -56,7 +57,7 @@ public class MyPagerAdapter extends PagerAdapter {
                 .with(container.getContext())
                 .load(new File(cursor.getString(DatabaseManager.COLUMN_PATH_IMAGE_NOTE)))
 //                .fitCenter()
-                .thumbnail(2f)
+                .priority(Priority.IMMEDIATE)
                 .placeholder(R.drawable.placeholder)
                 .into(img);
         container.addView(rootView);

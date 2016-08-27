@@ -55,9 +55,9 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.Holder> implem
         Glide
                 .with(context)
                 .load(new File(cursor.getString(DatabaseManager.COLUMN_PATH_IMAGE_NOTE)))
-//                .placeholder(R.drawable.placeholder)
-//                .crossFade()
-                .thumbnail(0.1f)
+                .placeholder(R.drawable.placeholder)
+                .crossFade()
+                .thumbnail(0.5f)
                 .into(holder.imgPreview);
         holder.card.setOnTouchListener(this);
     }

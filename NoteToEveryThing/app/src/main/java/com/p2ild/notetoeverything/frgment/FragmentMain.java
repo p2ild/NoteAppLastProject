@@ -58,7 +58,7 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
     private Handler handler;
     private RecyclerView.OnItemTouchListener rcvOnItemTouchListioner;
     private CustomStaggeredGridLayoutManager customStaggeredGridLayoutManager;//Custom view cho phép dừng hoặc tiếp tục scroll recycleView
-    private boolean isLongClick;//Khônng cho phép Action focus thực thi khi chưa long click
+    private boolean isLongClick;//Khônng cho phép ACTION_FOCUS và ACTION_UP thực thi khi chưa LONG_CLICK
 
     public FragmentMain(Cursor cursor) {
         this.cursor = cursor;
@@ -96,6 +96,7 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
         rcv.setHasFixedSize(true);
         customStaggeredGridLayoutManager = new CustomStaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
         rcv.setLayoutManager(customStaggeredGridLayoutManager);
+        customStaggeredGridLayoutManager.setCanScroll(true);
 
 
         rcv.setAdapter(noteAdapter);
@@ -111,7 +112,6 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
             public void onLongClick(View view, int position, float rawX, float rawY) {
                 // TODO: 8/26/2016 Lần đầu tiên load float option sai vị trí
                 isLongClick = true;
-                Log.d(TAG, "onLongClick: ");
                 rlFloatOption.setX(rawX - rlFloatOption.getWidth() / 2);
                 rlFloatOption.setY(rawY - 200 - rlFloatOption.getHeight() / 2);
 
@@ -130,7 +130,6 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
                 if(!isLongClick){
                     return;
                 }
-                Log.d(TAG, "onActionFocus: ");
                 switchButton(rawX, rawY);
                 switch (buttonFloatOption) {
                     case BUTTON_EDIT:
@@ -164,8 +163,9 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
 
             @Override
             public void onActionUp(float rawX, float rawY) {
-                Log.d(TAG, "onActionUp: ");
-                isLongClick=false;
+                if(!isLongClick){
+                    return;
+                }
                 switchButton(rawX, rawY);
                 switch (buttonFloatOption) {
                     case BUTTON_EDIT:
@@ -212,7 +212,8 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
                         rlFloatOption.setVisibility(View.GONE);
                         break;
                 }
-                buttonFloatOption=BUTTON_UNSELECTED;//Đặt lại default button tránh action focus nhảy lấy dữ button cũ để chạy
+                isLongClick=false;
+//                buttonFloatOption=BUTTON_UNSELECTED;//Đặt lại default button tránh action focus nhảy lấy dữ button cũ để chạy
                 customStaggeredGridLayoutManager.setCanScroll(true);
             }
         });

@@ -97,7 +97,11 @@ public class MainActivity extends Activity {
 
     public void showFrgCapture() {
         frgCapture = new FrgCapture();
-        getFragmentManager().beginTransaction().add(R.id.activity_main, frgCapture).commit();
+        getFragmentManager()
+                .beginTransaction()
+                .hide(frgAdd)
+                .add(R.id.activity_main, frgCapture)
+                .commit();
     }
 
     public void showFrgEdit(String title, String content) {
@@ -154,11 +158,11 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-
         if (frgAdd != null && frgAdd.isVisible()) {
             getFragmentManager().beginTransaction()
                     .remove(frgAdd)
-                    .show(frgMain).commit();
+                    .show(frgMain)
+                    .commit();
             return;
         }
 
@@ -174,9 +178,8 @@ public class MainActivity extends Activity {
             SurfaceView.camera.stopPreview();
             SurfaceView.camera.release();
             getFragmentManager().beginTransaction()
-                    .remove(frgAdd)
                     .remove(frgCapture)
-                    .show(frgMain)
+                    .show(frgAdd)
                     .commit();
             return;
         }

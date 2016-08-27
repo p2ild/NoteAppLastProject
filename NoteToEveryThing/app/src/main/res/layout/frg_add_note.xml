@@ -2,39 +2,34 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical" android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_item_title"
-    >
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:textSize="30sp"
-        android:text="New note"
-        android:textColor="@color/color_primary_text"
-        android:gravity="center"/>
-    <EditText
-        android:id="@+id/ed_note_title"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:hint="Note title"
-        android:textSize="20sp"
-        android:textStyle="bold"
-        android:textColor="@color/color_primary_text"
-        android:textColorHint="@color/color_secondary_text"
-        />
+    android:background="@color/bg_frg_add_note">
+
+        <EditText
+            android:id="@+id/ed_note_title"
+            android:gravity="center"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="Note title"
+            android:background="@drawable/edit_text"
+            android:drawableLeft="@drawable/ic_left_arrow_angle"
+            android:drawableRight="@drawable/ic_camera_lens"
+            android:padding="10dp"
+            android:textSize="25sp"
+            android:textStyle="bold"
+            android:textColor="@color/color_primary_text"
+            android:textColorHint="@color/color_secondary_text"
+            />
 
     <EditText
         android:id="@+id/ed_note_content"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
+        android:padding="10dp"
+        android:background="@drawable/edit_text"
         android:hint="Note content"
         android:textColor="@color/color_primary_text"
         android:textColorHint="@color/color_secondary_text"
         />
 
-    <Button
-        android:id="@+id/bt_capture_image"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="Capture image"
-        />
+
 </LinearLayout>

@@ -2,28 +2,30 @@ package com.p2ild.notetoeverything.frgment;
 
 import android.app.Fragment;
 import android.content.Context;
+import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.EditText;
 
-import com.p2ild.notetoeverything.activity.MainActivity;
 import com.p2ild.notetoeverything.R;
+import com.p2ild.notetoeverything.activity.MainActivity;
 
 
 /**
  * Created by duypi on 8/21/2016.
  */
-public class FrgAddNote extends Fragment implements View.OnClickListener {
+public class FrgAddNote extends Fragment implements View.OnTouchListener {
+    public static final int BUTTON_CAPTURE = 2;
     private static final String TAG = FrgAddNote.class.getSimpleName();
+    private static final int BUTTON_BACK = 0;
     private EditText edNoteTitle, edNoteContent;
-    private Button btCapture;
-    private String titleNote,contentNote;
     private InputMethodManager im;
+    private Drawable[] buttonDrawable;
 
     public FrgAddNote() {
     }
@@ -44,19 +46,10 @@ public class FrgAddNote extends Fragment implements View.OnClickListener {
     private void initView(View rootView) {
         edNoteTitle = (EditText) rootView.findViewById(R.id.ed_note_title);
         edNoteContent = (EditText) rootView.findViewById(R.id.ed_note_content);
-        // TODO: 8/26/2016 keyboard không biến mất khi click capture
-        (btCapture = (Button) rootView.findViewById(R.id.bt_capture_image)).setOnClickListener(this);
-    }
+        edNoteTitle.setOnTouchListener(this);
+        buttonDrawable = edNoteTitle.getCompoundDrawables();
 
-    @Override
-    public void onClick(View view) {
-        Log.d(TAG, "onClick: ");
-        replaceCharApostrophe();
-        ((MainActivity) getActivity()).showFrgCapture();
-
-        im.hideSoftInputFromWindow(edNoteTitle.getWindowToken(),0);
-        im.hideSoftInputFromWindow(edNoteContent.getWindowToken(),0);
-        super.onDetach();
+        // TODO: 8/26/2016 (----Done----)keyboard không biến mất khi click capture
     }
 
     @Override
@@ -70,23 +63,40 @@ public class FrgAddNote extends Fragment implements View.OnClickListener {
     }
 
     public String getNoteTitle() {
-        return titleNote;
+        return edNoteTitle.getText().toString();
     }
 
     public String getNoteContent() {
-        return contentNote;
+        return edNoteContent.getText().toString();
     }
 
-    private void replaceCharApostrophe(){
-        titleNote = edNoteTitle.getText().toString();
-        contentNote = edNoteContent.getText().toString();
 
-        if(!titleNote.contains("'") && !contentNote.contains("'")){
-            return;
+    @Override
+    public boolean onTouch(View view, MotionEvent motionEvent) {
+        switch (motionEvent.getAction()) {
+            case MotionEvent.ACTION_UP:
+                if (motionEvent.getRawX() > (edNoteTitle.getRight() - buttonDrawable[BUTTON_CAPTURE].getBounds().width())) {
+
+                    edNoteTitle.setFocusable(false);
+                    edNoteContent.setFocusable(false);
+                    im.hideSoftInputFromWindow(edNoteTitle.getWindowToken(), 0);
+                    im.hideSoftInputFromWindow(edNoteContent.getWindowToken(), 0);
+
+                    ((MainActivity) getActivity()).showFrgCapture();
+                    break;
+                }
+                if (motionEvent.getRawX() < (edNoteTitle.getLeft() + buttonDrawable[BUTTON_BACK].getBounds().width())) {
+                    edNoteTitle.setFocusable(false);
+                    edNoteContent.setFocusable(false);
+                    im.hideSoftInputFromWindow(edNoteTitle.getWindowToken(), 0);
+                    im.hideSoftInputFromWindow(edNoteContent.getWindowToken(), 0);
+                    ((MainActivity) getActivity()).onBackPressed();
+                    break;
+                }
+                break;
+            default:
+                break;
         }
-
-        titleNote = titleNote.replace("'","''");
-        contentNote = contentNote.replace("'","''");
-
+        return false;
     }
 }

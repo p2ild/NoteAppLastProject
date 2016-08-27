@@ -10,4 +10,6 @@
     <color name="bg_transparent">#00ffffff</color>
     <color name="bg_item_title">#FFFFFF</color>
     <color name="color_tranparent">#00FFFFFF</color>
+    <color name="bg_edit_text">#FFFFFF</color>
+    <color name="bg_frg_add_note">#ecf0f1</color>
 </resources>
