@@ -5,6 +5,7 @@ import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.util.Log;
+import android.widget.TextView;
 
 import com.p2ild.notetoeverything.DatabaseManager;
 import com.p2ild.notetoeverything.MyPagerAdapter;

@@ -96,22 +96,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
             }
 
         }
-//
-//
-//
-//
-//
-//
-//
-//                }
-//            }
-//            output.close();
-//            input.close();
-//        } catch (FileNotFoundException e) {
-//            e.printStackTrace();
-//        } catch (IOException e) {
-//            e.printStackTrace();
-//        }
+
     }
 
     @Override

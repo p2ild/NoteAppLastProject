@@ -43,13 +43,13 @@ public class MyPagerAdapter extends PagerAdapter {
         return super.getItemPosition(object);
     }
 
-
     @Override
     public Object instantiateItem(ViewGroup container, int position) {
         View rootView = LayoutInflater.from(container.getContext()).inflate(R.layout.item_view_pager, container, false);
         cursor.moveToPosition(cursor.getCount() - 1 - position);
 
-        ((TextView) rootView.findViewById(R.id.tv_title_note)).setText(cursor.getString(DatabaseManager.COLUMN_TITLE_NOTE));
+        ((TextView) container.getRootView().findViewById(R.id.tv_title_note)).setText(cursor.getString(DatabaseManager.COLUMN_TITLE_NOTE));
+        Log.d(TAG, "instantiateItem: noteTitle: "+cursor.getString(DatabaseManager.COLUMN_TITLE_NOTE));
         ((TextView) rootView.findViewById(R.id.tv_content_note)).setText(cursor.getString(DatabaseManager.COLUMN_CONTENT_NOTE));
 
         img = (ImageView) rootView.findViewById(R.id.iv_show_image);
