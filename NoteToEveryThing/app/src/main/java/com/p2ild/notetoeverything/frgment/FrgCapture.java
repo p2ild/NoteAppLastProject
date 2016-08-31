@@ -14,9 +14,9 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 
-import com.p2ild.notetoeverything.activity.MainActivity;
 import com.p2ild.notetoeverything.R;
 import com.p2ild.notetoeverything.SurfaceView;
+import com.p2ild.notetoeverything.activity.MainActivity;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -64,12 +64,17 @@ public class FrgCapture extends Fragment implements View.OnClickListener {
             public void onPictureTaken(byte[] bytes, Camera camera) {
                 FileOutputStream op = null;
                 try {
+                    //Lưu file gốc
                     op = new FileOutputStream(PATH_INTERNAL + fileNameImage);
                     op.write(bytes);
                     op.close();
 
+                    //Lưu file thumbnail
                     op = new FileOutputStream(PATH_INTERNAL + fileNameImageThumbnail);
-                    op.write(bytes);
+                    int width = (int) (camera.getParameters().getPictureSize().width / 7);
+                    int height = (int) (camera.getParameters().getPictureSize().height / 7);
+                    Bitmap bitmap = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeByteArray(bytes, 0, bytes.length), width, height);
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, op);
                     op.close();
                 } catch (IOException e) {
                     Log.d(TAG, "EXCEPTION");

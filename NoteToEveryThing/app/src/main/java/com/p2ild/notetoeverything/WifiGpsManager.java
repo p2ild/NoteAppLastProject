@@ -31,20 +31,16 @@ public class WifiGpsManager {
     }
 
     public void getLocation() {
-
-
         final Handler handler = new Handler();
         handler.postDelayed(new Runnable() {
             @Override
             public void run() {
-
                 handler.postDelayed(this, 100);
             }
         }, 100);
     }
 
     public void getGpsInfomation(){
-        Log.d(TAG, "getGpsInfomation: ");
         locationListener = new LocationListener() {
             @Override
             public void onLocationChanged(Location loc) {
@@ -54,17 +50,14 @@ public class WifiGpsManager {
 
             @Override
             public void onStatusChanged(String s, int i, Bundle bundle) {
-
             }
 
             @Override
             public void onProviderEnabled(String s) {
-
             }
 
             @Override
             public void onProviderDisabled(String s) {
-
             }
         };
 
@@ -82,7 +75,6 @@ public class WifiGpsManager {
     }
 
     public String getWifiInfomation(){
-        Log.d(TAG, "getWifiInfomation: ");
         ssid = wf.getConnectionInfo().getSSID();
         return ssid;
     }

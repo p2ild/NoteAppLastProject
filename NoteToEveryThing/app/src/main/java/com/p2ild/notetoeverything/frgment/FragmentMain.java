@@ -9,11 +9,9 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
@@ -21,11 +19,11 @@ import android.widget.TextView;
 import android.widget.Toast;
 
 import com.p2ild.notetoeverything.DatabaseManager;
-import com.p2ild.notetoeverything.NoteAdapter;
+import com.p2ild.notetoeverything.Adapter.NoteAdapter;
 import com.p2ild.notetoeverything.R;
 import com.p2ild.notetoeverything.RecycleViewOnItemTouch;
 import com.p2ild.notetoeverything.WifiGpsManager;
-import com.p2ild.notetoeverything.activity.CustomStaggeredGridLayoutManager;
+import com.p2ild.notetoeverything.CustomStaggeredGridLayoutManager;
 import com.p2ild.notetoeverything.activity.MainActivity;
 
 
@@ -85,7 +83,8 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
     private void initViewChild(final NoteAdapter noteAdapter) {
         (btAddNote = (ImageButton) rootView.findViewById(R.id.bt_add_note)).setOnClickListener(this);
 
-        ((TextView) rootView.findViewById(R.id.tv_title_action_bar)).setText("All note(" + cursor.getCount() + ")");
+        // TODO: 8/31/2016 Chưa đặt snipper
+        ((TextView) rootView.findViewById(R.id.tv_title_action_bar)).setText("All note( " + cursor.getCount() + " )");
 
         isLongClick=false;
 
@@ -101,7 +100,7 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
 
         rcv.setAdapter(noteAdapter);
         rcvOnItemTouchListioner = new RecycleViewOnItemTouch(getActivity(), rcv, new RecycleViewOnItemTouch.onItemClick() {
-            // TODO: (-----Done-----) 8/25/2016 Chưa xử lý code long press khi action up thì option float sẽ biến mất
+            // TODO: 8/25/2016  (-----Done-----) Chưa xử lý code long press khi action up thì option float sẽ biến mất
             @Override
             public void onClick(View view, int position) {
                 ((MainActivity) getActivity()).startNoteActivity(position);
@@ -177,11 +176,12 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
                         ((MainActivity) getActivity()).showFrgEdit(title, content);
                         break;
                     case BUTTON_ALARM:
-                        // TODO: 8/25/2016 Chưa xử lý code nhắc nhở thời gian cho note
+                        // TODO: 8/25/2016 Chưa xử lý code báo thức cho note
                         rlFloatOption.setVisibility(View.GONE);
                         Toast.makeText(getActivity(), "This function can't use in this version", Toast.LENGTH_SHORT).show();
                         break;
                     case BUTTON_SHARE:
+                        // TODO: 8/31/2016 sử dụng Share Action Provider - TL Lập trình ANDROID P38
                         Toast.makeText(getActivity(), "This function can't use in this version", Toast.LENGTH_SHORT).show();
                         rlFloatOption.setVisibility(View.GONE);
                         break;

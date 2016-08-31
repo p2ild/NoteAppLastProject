@@ -4,11 +4,10 @@ import android.app.Activity;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
-import android.util.Log;
 import android.widget.TextView;
 
 import com.p2ild.notetoeverything.DatabaseManager;
-import com.p2ild.notetoeverything.MyPagerAdapter;
+import com.p2ild.notetoeverything.Adapter.MyPagerAdapter;
 import com.p2ild.notetoeverything.R;
 
 /**
@@ -19,6 +18,7 @@ public class NoteContentActivity extends Activity{
     private static final String TAG = NoteContentActivity.class.getSimpleName();
     private ViewPager vp;
 
+    // TODO: 8/31/2016 Chưa xử lý sự kiện cho các button
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -38,5 +38,7 @@ public class NoteContentActivity extends Activity{
         vp = (ViewPager) findViewById(R.id.view_pager);
         vp.setAdapter(myPagerAdapter);
         vp.setCurrentItem(positionClick);
+        // TODO: 8/31/2016 PageTitle load sai
+        ((TextView)findViewById(R.id.tv_title_note)).setText(myPagerAdapter.getPageTitle(positionClick));
     }
 }

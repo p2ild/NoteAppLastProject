@@ -1,4 +1,4 @@
-package com.p2ild.notetoeverything;
+package com.p2ild.notetoeverything.Adapter;
 
 import android.database.Cursor;
 import android.support.v4.view.PagerAdapter;
@@ -11,6 +11,8 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.Priority;
+import com.p2ild.notetoeverything.DatabaseManager;
+import com.p2ild.notetoeverything.R;
 
 import java.io.File;
 
@@ -41,6 +43,11 @@ public class MyPagerAdapter extends PagerAdapter {
     @Override
     public int getItemPosition(Object object) {
         return super.getItemPosition(object);
+    }
+
+    @Override
+    public CharSequence getPageTitle(int position) {
+        return cursor.getString(cursor.getColumnIndex(DatabaseManager.NAME_COLUMN_TITLE_NOTE));
     }
 
     @Override
