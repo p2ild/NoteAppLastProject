@@ -4,13 +4,16 @@ import android.app.Activity;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Handler;
-import android.util.Log;
+import android.support.v4.widget.DrawerLayout;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
 import com.p2ild.notetoeverything.DatabaseManager;
 import com.p2ild.notetoeverything.R;
 import com.p2ild.notetoeverything.SurfaceView;
+import com.p2ild.notetoeverything.WifiGpsManager;
 import com.p2ild.notetoeverything.frgment.FragmentMain;
 import com.p2ild.notetoeverything.frgment.FrgAddNote;
 import com.p2ild.notetoeverything.frgment.FrgCapture;
@@ -18,7 +21,7 @@ import com.p2ild.notetoeverything.frgment.FrgEdit;
 
 import java.io.File;
 
-public class MainActivity extends Activity {
+public class MainActivity extends Activity implements View.OnClickListener {
 
     public static final String KEY_POSITION = "KEY_POSITION";
     public static final String KEY_OBJECT_DB = "KEY_OBJECT_DB";
@@ -31,36 +34,39 @@ public class MainActivity extends Activity {
     private ImageButton btAddNote;
     private boolean isFileExists;
     private FrgEdit frgEdit;
+    private WifiGpsManager wifiGpsManager;
+    private DrawerLayout drw;
+    private Button btBackup, btRestore;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-
         //Khởi tạo cơ sở dữ liệu load ảnh thêm sửa xóa
         db = new DatabaseManager(this);
 
-        /*Backup Database và ảnh
-        *backupAllDatabase();
-        * */
+        drw = (DrawerLayout) findViewById(R.id.drawer_layout);
+        (btBackup  = (Button) findViewById(R.id.bt_backup)).setOnClickListener(this);
+        (btRestore  = (Button) findViewById(R.id.bt_restore)).setOnClickListener(this);
 
         //Khởi tạo view
         showFrgMain();
         isExit = false;
 
+        wifiGpsManager = new WifiGpsManager(this);
+
         initOpenCV();
     }
 
     private void backupAllDatabase() {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
+        // TODO: 8/31/2016 Backup data chưa sử dụng asyncTask
                 db.backupAllNote();
-            }
-        });
-        thread.start();
     }
 
+    private void restoreAllDatabase() {
+        // TODO: 8/31/2016 Backup data chưa sử dụng asyncTask
+                db.restoreAllNote();
+    }
 
     private void initOpenCV() {
         // TODO: 8/25/2016 Khởi tạo OpenCv xử lý ảnh
@@ -83,6 +89,7 @@ public class MainActivity extends Activity {
 
     private void showFrgMain() {
         removeAllFragment();
+        // TODO: 8/31/2016 Update data recycle view chưa sử dụng notifyDataSetChange
         frgMain = new FragmentMain(db.readAllData());
         getFragmentManager().beginTransaction()
                 .replace(R.id.activity_main, frgMain).commit();
@@ -119,21 +126,18 @@ public class MainActivity extends Activity {
             public void run() {
                 File file = new File(imgThumbnailPath);
                 while (!isFileExists) {
-                    Log.d(TAG, "while true");
                     if (file.exists()) {
                         showFrgMain();
                         getFragmentManager().beginTransaction()
                                 .remove(frgCapture)
                                 .remove(frgAdd)
                                 .commit();
-                        Log.d(TAG, "show complete");
                         SurfaceView.camera.stopPreview();
                         SurfaceView.camera.release();
 
                         isFileExists = true;
                         break;
                     } else {
-                        Log.d(TAG, "Chưa tồn tại");
                         try {
                             Thread.sleep(1000);
                         } catch (InterruptedException e) {
@@ -201,5 +205,19 @@ public class MainActivity extends Activity {
         Intent intent = new Intent(MainActivity.this, NoteContentActivity.class);
         intent.putExtra(KEY_POSITION, position);
         startActivity(intent);
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()){
+            case R.id.bt_backup:
+                backupAllDatabase();
+                break;
+            case R.id.bt_restore:
+                restoreAllDatabase();
+                break;
+            default:
+                break;
+        }
     }
 }
