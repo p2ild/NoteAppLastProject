@@ -42,6 +42,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
     private static final int MSG_RESTORE = 222;
     private static final int MSG_UPDATE_PERCENT_BACKUP = 333;
     private static final int MSG_UPDATE_PERCENT_RESTORE = 444;
+    private static final String PATH_APP_INTERNAL = Environment.getDataDirectory() + "/data/com.p2ild.notetoeverything";
     private final Context context;
     private SQLiteDatabase db;
     private Handler handler = new Handler() {
@@ -51,19 +52,19 @@ public class DatabaseManager extends SQLiteOpenHelper {
             switch (msg.what) {
                 case MSG_UPDATE_PERCENT_BACKUP:
                     float percentBackup = (msg.arg1 * 100) / msg.arg2;
-                    ((TextView) ((Activity) context).findViewById(R.id.tv_title_action_bar)).setText("Backup : " + (int) percentBackup+" %");
+                    ((TextView) ((Activity) context).findViewById(R.id.tv_title_action_bar)).setText("Backup : " + (int) percentBackup + " %");
                     break;
                 case MSG_UPDATE_PERCENT_RESTORE:
                     float percentRestore = (msg.arg1 * 100) / msg.arg2;
-                    ((TextView) ((Activity) context).findViewById(R.id.tv_title_action_bar)).setText("Restore : " + (int) percentRestore+" %");
+                    ((TextView) ((Activity) context).findViewById(R.id.tv_title_action_bar)).setText("Restore : " + (int) percentRestore + " %");
                     break;
                 // TODO: 9/1/2016 Load sai tổng số note
                 case MSG_BACKUP:
-                    ((TextView) ((Activity) context).findViewById(R.id.tv_title_action_bar)).setText("ALL NOTE (" + (msg.arg1/2) + ")");
+                    ((TextView) ((Activity) context).findViewById(R.id.tv_title_action_bar)).setText("ALL NOTE (" + (msg.arg1 / 2) + ")");
                     Toast.makeText(context, "Sao lưu dữ liệu hoàn tất", Toast.LENGTH_LONG).show();
                     break;
                 case MSG_RESTORE:
-                    ((TextView) ((Activity) context).findViewById(R.id.tv_title_action_bar)).setText("ALL NOTE (" + (msg.arg1/2) + ")");
+                    ((TextView) ((Activity) context).findViewById(R.id.tv_title_action_bar)).setText("ALL NOTE (" + readAllData().getCount() + ")");
                     Toast.makeText(context, "Phục hồi dữ liệu hoàn tất", Toast.LENGTH_LONG).show();
                     break;
                 default:
@@ -76,7 +77,6 @@ public class DatabaseManager extends SQLiteOpenHelper {
         super(context, DATABASE_NAME, null, VERSION);
         db = this.getWritableDatabase();
         this.context = context;
-//        dropTableIfExists();
         createTableIfNotExists();
     }
 
@@ -124,6 +124,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
     /*Đọc tất cả các dữ liệu. Gọi ở chỗ setAdapter của RecycleView trong Fragment Main*/
     public Cursor readAllData() {
         openDb();
+        // TODO: 9/1/2016 Xóa table nên select từ table bị lỗi
         String sql = "SELECT * FROM " + TABLE_NAME;
         Cursor cursor = db.rawQuery(sql, null);
         Log.d(TAG, "cursor.getCount= " + cursor.getCount());
@@ -198,17 +199,14 @@ public class DatabaseManager extends SQLiteOpenHelper {
     /*Back up file database*/
     public void backupDataBase(String path) {
         //Trỏ tới file db ở Internal Storage
-        File fileIn = new File(Environment.getDataDirectory() + "/data/com.p2ild.notetoeverything/databases/" + DATABASE_NAME);
+        File fileIn = new File(PATH_APP_INTERNAL + "/databases/" + DATABASE_NAME);
         try {
             FileInputStream input = new FileInputStream(fileIn);
-            File fileOut = new File(path + "/" + DATABASE_NAME);
-            FileOutputStream output = new FileOutputStream(fileOut);
-            if (!fileOut.exists() || fileOut.getTotalSpace() != fileIn.getTotalSpace()) {
-                byte[] b = new byte[1024];
-                int length;
-                while ((length = input.read(b)) != -1) {
-                    output.write(b, 0, length);
-                }
+            FileOutputStream output = new FileOutputStream((path + "/" + DATABASE_NAME));
+            byte[] b = new byte[1024];
+            int length;
+            while ((length = input.read(b)) != -1) {
+                output.write(b, 0, length);
             }
             output.close();
             input.close();
@@ -223,35 +221,30 @@ public class DatabaseManager extends SQLiteOpenHelper {
     /*Back up tất cả các ảnh và thumbnail của nó*/
     public void backupImageNote(String path) {
         File fileSource = new File(Environment.getDataDirectory() + "/data/com.p2ild.notetoeverything/imageSave");
-        FileOutputStream output = null;
-        FileInputStream input = null;
-        File fileOut = null;
         File[] listFile = fileSource.listFiles();
-        int percent=0;
+        int percent = 0;
         for (File pointer : fileSource.listFiles()) {
             try {
                 Message messagePercentBackup = new Message();
                 messagePercentBackup.what = MSG_UPDATE_PERCENT_BACKUP;
-                messagePercentBackup.arg1=percent;
-                messagePercentBackup.arg2=fileSource.listFiles().length;
+                messagePercentBackup.arg1 = percent;
+                messagePercentBackup.arg2 = fileSource.listFiles().length;
                 handler.sendMessage(messagePercentBackup);
                 percent++;
                 if (pointer.getName().equals(listFile[listFile.length - 1].getName())) {
                     Message messageBackup = new Message();
-                    messageBackup.what=MSG_BACKUP;
-                    messageBackup.arg1=listFile.length;
+                    messageBackup.what = MSG_BACKUP;
+                    messageBackup.arg1 = listFile.length;
                     handler.sendMessage(messageBackup);
                 }
-                input = new FileInputStream(pointer.getPath());
-                fileOut = new File(path + "/" + pointer.getName());
-                output = new FileOutputStream(fileOut);
-//                if (!fileOut.exists()) {
-                    byte[] b = new byte[1024];
-                    int length;
-                    while ((length = input.read(b)) != -1) {
-                        output.write(b, 0, length);
-                    }
-//                }
+                FileInputStream input = new FileInputStream(pointer.getPath());
+                File fileOut = new File(path + "/" + pointer.getName());
+                FileOutputStream output = new FileOutputStream(fileOut);
+                byte[] b = new byte[1024];
+                int length;
+                while ((length = input.read(b)) != -1) {
+                    output.write(b, 0, length);
+                }
                 input.close();
                 output.close();
 //                MediaScannerConnection.scanFile(context, new String[]{file1.getPath()}, null, null);
@@ -266,81 +259,76 @@ public class DatabaseManager extends SQLiteOpenHelper {
     /*Restore toàn bộ note*/
     public void restoreAllNote() {
         //Trỏ tới folder backup ở External Storage
-        Toast.makeText(context, "Bắt đầu quá trình phục hồi database. Sẽ có thông báo khi quá trình hoàn tất", Toast.LENGTH_LONG).show();
-        File folderBackup = new File(Environment.getExternalStorageDirectory() + "/" + FOLDER_BACKUP_NAME);
+        final File folderBackup = new File(Environment.getExternalStorageDirectory() + "/" + FOLDER_BACKUP_NAME);
         //Nếu folder backup không tồn tại đưa ra thông báo
         if (!folderBackup.exists()) {
             Toast.makeText(context, "Folder backup không tồn tại", Toast.LENGTH_LONG).show();
         }
         //Tồn tại thì tiếp tục đọc dữ liệu để ghi vào Internal Storage
         else {
-            restoreAll(folderBackup.getPath());
+            Toast.makeText(context, "Bắt đầu quá trình phục hồi database. Sẽ có thông báo khi quá trình hoàn tất", Toast.LENGTH_LONG).show();
+            new Thread(new Runnable() {
+                @Override
+                public void run() {
+                    restore(folderBackup.getPath());
+                }
+            }).start();
         }
     }
 
-    private void restoreAll(final String path) {
-        Thread thread = new Thread(new Runnable() {
-            @Override
-            public void run() {
-                File fileSource = new File(path);
-                FileInputStream fileInputStream = null;
-                FileOutputStream fileOutputStream = null;
-                //Tạo folder imgSave nếu nó chưa tồn tại ở Internal Storage
-                File imgSave = new File(Environment.getDataDirectory() + "/data/com.p2ild.notetoeverything/imageSave");
-                if (!imgSave.exists()) {
-                    imgSave.mkdir();
-                }
-                //Duyệt tất cả các file của File backup ở External Storage
-//                for (int i=0;i<(fileSource.length()-1);i++) {
-                File[] listFile = fileSource.listFiles();
-                int percent=0;
-                for (File pointer : fileSource.listFiles()) {
-                    Message messagePercentRestore = new Message();
-                    messagePercentRestore.what = MSG_UPDATE_PERCENT_RESTORE;
-                    messagePercentRestore.arg1=percent;
-                    messagePercentRestore.arg2=fileSource.listFiles().length;
-                    handler.sendMessage(messagePercentRestore);
-                    percent++;
-                    try {
-                        File fileOut = null;
-                        if (pointer.getName().equals(listFile[listFile.length - 1].getName())) {
-                            Message messageRestore = new Message();
-                            messageRestore.what=MSG_RESTORE;
-                            messageRestore.arg1=listFile.length;
-                            handler.sendMessage(messageRestore);
-                        }
-                        fileInputStream = new FileInputStream(pointer.getPath());
+    private void restore(final String path) {
+        try {
+            File fileSource = new File(path);
+            int percent = 0;
 
-                        //Nếu là file data base thì lưu vào thư mục database ở Internal Storage
-                        if (pointer.getName().equals(DATABASE_NAME)) {
-                            fileOutputStream = new FileOutputStream(Environment.getDataDirectory() + "/data/com.p2ild.notetoeverything/databases/" + pointer.getName());
-                        }
-                        //Nếu là file ảnh thì lưu vào thư mục imageSave ở Internal Storage
-                        else {
-                            fileOut = new File(Environment.getDataDirectory() + "/data/com.p2ild.notetoeverything/imageSave/" + pointer.getName());
-                            fileOutputStream = new FileOutputStream(fileOut);
-                        }
-                        //Nếu file tồn tại rồi thì khỏi ghi nhảy sang file tiếp theo
-//                        if (!fileOut.exists()) {
-                            Log.d(TAG, "run: " + pointer.getPath());
-                            byte[] b = new byte[1024];
-                            int length;
-                            while ((length = fileInputStream.read(b)) != -1) {
-                                fileOutputStream.write(b, 0, length);
-                            }
-//                        }
-                        fileInputStream.close();
-                        fileOutputStream.close();
-//                MediaScannerConnection.scanFile(context, new String[]{file1.getPath()}, null, null);
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
+            //Sao lưu file database vào bộ nhớ
+            FileInputStream fileIn = new FileInputStream(path + "/" + DATABASE_NAME);
+            FileOutputStream fileOut = new FileOutputStream(PATH_APP_INTERNAL + "/databases/" + DATABASE_NAME);
+            byte[] b = new byte[1024];
+            int length;
+            while ((length = fileIn.read(b)) != -1) {
+                fileOut.write(b, 0, length);
+            }
+            percent++;
+            fileIn.close();
+            fileOut.close();
+
+            //Sao lưu file ảnh vào bộ nhớ
+            for (File pointer : fileSource.listFiles()) {
+                if (pointer.getName().equals(fileSource.listFiles()[fileSource.listFiles().length - 1].getName())) {
+                    handler.sendEmptyMessage(MSG_RESTORE);
+                }
+                Message message = new Message();
+                message.what = MSG_UPDATE_PERCENT_RESTORE;
+                message.arg1 = percent;
+                message.arg2 = fileSource.listFiles().length - 1;
+                handler.sendMessage(message);
+                percent++;
+                FileInputStream fileInputStream = new FileInputStream(pointer.getPath());
+                if (!pointer.getName().equals(DATABASE_NAME)) {
+                    File fileImgOut = new File(PATH_APP_INTERNAL + "/imageSave/" + pointer.getName());
+                    FileOutputStream fops = new FileOutputStream(fileImgOut);
+                    byte[] bImg = new byte[1024];
+                    int lengthImg;
+                    while ((lengthImg = fileInputStream.read(bImg)) != -1) {
+                        fops.write(bImg, 0, lengthImg);
                     }
+                    fileInputStream.close();
+                    fops.close();
                 }
             }
-        });
-        thread.start();
+        } catch (FileNotFoundException e) {
+            Log.d(TAG, "restore: lỗi: " + e);
+            e.printStackTrace();
+        } catch (IOException e) {
+            Log.d(TAG, "restore: lỗi: " + e);
+            e.printStackTrace();
+        }
+    }
 
+    public void delTable() {
+        openDb();
+        dropTableIfExists();
+        closeDb();
     }
 }

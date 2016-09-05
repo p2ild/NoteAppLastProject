@@ -47,7 +47,7 @@ public class MyPagerAdapter extends PagerAdapter {
 
     @Override
     public CharSequence getPageTitle(int position) {
-        return cursor.getString(cursor.getColumnIndex(DatabaseManager.NAME_COLUMN_TITLE_NOTE));
+        return super.getPageTitle(position+1);
     }
 
     @Override

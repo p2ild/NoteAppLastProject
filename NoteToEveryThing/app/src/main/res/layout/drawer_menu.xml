@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@color/color_secondary_text">
+    android:background="@color/cardview_shadow_start_color">
     <RelativeLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
@@ -28,6 +28,7 @@
         android:layout_height="wrap_content"
         android:text="Sao lưu dữ liệu"
         android:textSize="30sp"
+        android:textColor="@color/text_light"
         android:background="@color/color_tranparent"
         />
 
@@ -37,6 +38,17 @@
         android:layout_height="wrap_content"
         android:text="Phục hồi dữ liệu"
         android:textSize="20sp"
+        android:textColor="@color/text_light"
+        android:background="@color/color_tranparent"
+        />
+
+    <Button
+        android:id="@+id/bt_reset_note"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="Xóa hết các note đã lưu"
+        android:textSize="10sp"
+        android:textColor="@color/text_light"
         android:background="@color/color_tranparent"
         />
 

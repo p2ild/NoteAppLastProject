@@ -3,8 +3,7 @@
     android:id="@+id/rl_float_option"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:orientation="vertical"
-    android:visibility="visible">
+    android:orientation="vertical">
 
     <ImageButton
         android:id="@+id/ib_alarm"
@@ -24,7 +23,8 @@
         android:layout_height="wrap_content"
         android:layout_below="@id/ib_alarm"
         android:background="@color/color_tranparent"
-        android:src="@drawable/ic_pencil" />
+        android:src="@drawable/ic_pencil"
+        />
 
     <ImageButton
         android:id="@+id/ib_recycling"

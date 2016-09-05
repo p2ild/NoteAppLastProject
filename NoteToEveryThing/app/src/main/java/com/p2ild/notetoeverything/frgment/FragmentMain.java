@@ -1,29 +1,36 @@
 package com.p2ild.notetoeverything.frgment;
 
+import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.database.Cursor;
+import android.os.AsyncTask;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
+import android.os.SystemClock;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.view.ViewTreeObserver;
+import android.view.animation.Animation;
+import android.view.animation.AnimationUtils;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.p2ild.notetoeverything.DatabaseManager;
 import com.p2ild.notetoeverything.Adapter.NoteAdapter;
+import com.p2ild.notetoeverything.CustomStaggeredGridLayoutManager;
+import com.p2ild.notetoeverything.DatabaseManager;
 import com.p2ild.notetoeverything.R;
 import com.p2ild.notetoeverything.RecycleViewOnItemTouch;
 import com.p2ild.notetoeverything.WifiGpsManager;
-import com.p2ild.notetoeverything.CustomStaggeredGridLayoutManager;
 import com.p2ild.notetoeverything.activity.MainActivity;
 
 
@@ -38,7 +45,7 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
     private static final int BUTTON_DELETE = 3;
     private static final int BUTTON_SHARE = 4;
     private static final int BUTTON_UNSELECTED = 0;
-    private final Cursor cursor;
+    private Cursor cursor;
     private View rootView;
     private RecyclerView rcv;
     private LinearLayout llActionBar;
@@ -57,6 +64,11 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
     private RecyclerView.OnItemTouchListener rcvOnItemTouchListioner;
     private CustomStaggeredGridLayoutManager customStaggeredGridLayoutManager;//Custom view cho phép dừng hoặc tiếp tục scroll recycleView
     private boolean isLongClick;//Khônng cho phép ACTION_FOCUS và ACTION_UP thực thi khi chưa LONG_CLICK
+    private NoteAdapter noteAdapter;
+    private int heightFloatOption;
+    private int widthFloatOption;
+    private Animation animation;
+    private AsyncTask animRunOnce;
 
     public FragmentMain(Cursor cursor) {
         this.cursor = cursor;
@@ -75,18 +87,23 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.frg_layout_main, container, false);
-        final NoteAdapter noteAdapter = new NoteAdapter(getActivity(), cursor);
-        initViewChild(noteAdapter);
+        noteAdapter = new NoteAdapter(getActivity(), cursor);
+        initViewChild();
         return rootView;
     }
 
-    private void initViewChild(final NoteAdapter noteAdapter) {
+    public void updateRecyclerView(Cursor cursor) {
+        this.cursor = cursor;
+        rcv.getAdapter().notifyDataSetChanged();
+    }
+
+    private void initViewChild() {
         (btAddNote = (ImageButton) rootView.findViewById(R.id.bt_add_note)).setOnClickListener(this);
 
         // TODO: 8/31/2016 Chưa đặt snipper
         ((TextView) rootView.findViewById(R.id.tv_title_action_bar)).setText("All note( " + cursor.getCount() + " )");
-
-        isLongClick=false;
+        animation = AnimationUtils.loadAnimation(getActivity(), R.anim.float_option);
+        isLongClick = false;
 
         wifiGpsManager = new WifiGpsManager(getActivity());
 
@@ -107,49 +124,60 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
             }
 
             /*Hiện float option*/
+            @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
             @Override
-            public void onLongClick(View view, int position, float rawX, float rawY) {
+            public void onLongClick(View view, int position, final float rawX, final float rawY) {
                 // TODO: 8/26/2016 Lần đầu tiên load float option sai vị trí
                 isLongClick = true;
-                rlFloatOption.setX(rawX - rlFloatOption.getWidth() / 2);
-                rlFloatOption.setY(rawY - 200 - rlFloatOption.getHeight() / 2);
-
                 widthScreen = getResources().getDisplayMetrics().widthPixels;
                 heightScreen = getResources().getDisplayMetrics().widthPixels;
                 rlFloatOption.setVisibility(View.VISIBLE);
+                rlFloatOption.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                    @Override
+                    public void onGlobalLayout() {
+                        widthFloatOption = rlFloatOption.getWidth();
+                        heightFloatOption = rlFloatOption.getHeight();
+                        rlFloatOption.setTranslationX(rawX - widthFloatOption / 2);
+                        rlFloatOption.setTranslationY(rawY - 200 - heightFloatOption / 2);
+                    }
+                });
+                rlFloatOption.startAnimation(animation);
                 positionCurrentItem = cursor.getCount() - 1 - position;
                 customStaggeredGridLayoutManager.setCanScroll(false);
 
                 setDefaultDrawableImageButton();
-
             }
 
             @Override
             public void onActionFocus(float rawX, float rawY) {
-                if(!isLongClick){
+                if (!isLongClick) {
                     return;
                 }
                 switchButton(rawX, rawY);
+                if (buttonFloatOption == BUTTON_UNSELECTED) {
+                    animRunOnce = null;
+                }
                 switch (buttonFloatOption) {
                     case BUTTON_EDIT:
-//                        if (!runAnim) {
-//                            YoYo.with(Techniques.RotateInUpLeft).duration(500).playOn(ibEdit);
-//                        }
+                        startAnimRotate(BUTTON_EDIT);
                         ibEdit.setImageResource(R.drawable.ic_pencil_focus);
                         buttonFloatOption = BUTTON_UNSELECTED;
 //                        runAnim=true;
                         break;
                     case BUTTON_ALARM:
+                        startAnimRotate(BUTTON_ALARM);
 //                        YoYo.with(Techniques.RotateIn).duration(500).playOn(ibAlarm);
                         ibAlarm.setImageResource(R.drawable.ic_alarm_clock_focus);
                         buttonFloatOption = BUTTON_UNSELECTED;
                         break;
                     case BUTTON_SHARE:
+                        startAnimRotate(BUTTON_SHARE);
 //                        YoYo.with(Techniques.RotateIn).duration(500).playOn(ibDelete);
                         ibShare.setImageResource(R.drawable.ic_share_focus);
                         buttonFloatOption = BUTTON_UNSELECTED;
                         break;
                     case BUTTON_DELETE:
+                        startAnimRotate(BUTTON_DELETE);
 //                        YoYo.with(Techniques.RotateIn).duration(500).playOn(ibDelete);
                         ibDelete.setImageResource(R.drawable.ic_recycling_focus);
                         buttonFloatOption = BUTTON_UNSELECTED;
@@ -159,10 +187,9 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
                         break;
                 }
             }
-
             @Override
             public void onActionUp(float rawX, float rawY) {
-                if(!isLongClick){
+                if (!isLongClick) {
                     return;
                 }
                 switchButton(rawX, rawY);
@@ -172,7 +199,6 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
                         cursor.moveToPosition(positionCurrentItem);
                         String title = cursor.getString(DatabaseManager.COLUMN_TITLE_NOTE);
                         String content = cursor.getString(DatabaseManager.COLUMN_CONTENT_NOTE);
-
                         ((MainActivity) getActivity()).showFrgEdit(title, content);
                         break;
                     case BUTTON_ALARM:
@@ -212,7 +238,7 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
                         rlFloatOption.setVisibility(View.GONE);
                         break;
                 }
-                isLongClick=false;
+                isLongClick = false;
 //                buttonFloatOption=BUTTON_UNSELECTED;//Đặt lại default button tránh action focus nhảy lấy dữ button cũ để chạy
                 customStaggeredGridLayoutManager.setCanScroll(true);
             }
@@ -221,13 +247,56 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
 
         //init Float Option
         rlFloatOption = (RelativeLayout) rootView.findViewById(R.id.rl_float_option);
-        rlFloatOption.setVisibility(View.GONE);
+//        rlFloatOption.setVisibility(View.GONE);
         ibEdit = (ImageButton) rootView.findViewById(R.id.ib_pencil);
         ibAlarm = (ImageButton) rootView.findViewById(R.id.ib_alarm);
         ibDelete = (ImageButton) rootView.findViewById(R.id.ib_recycling);
         ibShare = (ImageButton) rootView.findViewById(R.id.ib_share);
 
         llActionBar = (LinearLayout) rootView.findViewById(R.id.action_bar);
+    }
+    private void startAnimRotate(final int buttonFocus) {
+        if (animRunOnce == null) {
+            AsyncTask<Void, Integer, Void> animRotate = new AsyncTask<Void, Integer, Void>() {
+                @Override
+                protected void onPreExecute() {
+                    super.onPreExecute();
+                    animRunOnce = this;
+                }
+
+                @Override
+                protected Void doInBackground(Void... voids) {
+                    for (int i = 0; i < 360; i++) {
+                        SystemClock.sleep(2);
+                        publishProgress(i);
+                    }
+                    return null;
+                }
+
+                @Override
+                protected void onProgressUpdate(Integer... values) {
+                    super.onProgressUpdate(values);
+                    switch (buttonFocus) {
+                        case BUTTON_EDIT:
+                            ibEdit.setRotationX(values[0]);
+                            break;
+                        case BUTTON_ALARM:
+                            ibAlarm.setRotationX(values[0]);
+                            break;
+                        case BUTTON_SHARE:
+                            ibShare.setRotationX(values[0]);
+                            break;
+                        case BUTTON_DELETE:
+                            ibDelete.setRotationX(values[0]);
+                            break;
+                        default:
+                            break;
+                    }
+
+                }
+            };
+            animRotate.execute();
+        }
     }
 
     private void setDefaultDrawableImageButton() {
@@ -304,6 +373,7 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
 //                handler.postDelayed(this,1000);
 //            }
 //        },1000);
+        rlFloatOption.setVisibility(View.GONE);
     }
 
     @Override

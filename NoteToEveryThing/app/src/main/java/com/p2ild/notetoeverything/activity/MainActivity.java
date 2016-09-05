@@ -2,9 +2,11 @@ package com.p2ild.notetoeverything.activity;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.widget.DrawerLayout;
+import android.util.Log;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
@@ -36,7 +38,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private FrgEdit frgEdit;
     private WifiGpsManager wifiGpsManager;
     private DrawerLayout drw;
-    private Button btBackup, btRestore;
+    private Button btBackup, btRestore,btReset;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,8 +48,9 @@ public class MainActivity extends Activity implements View.OnClickListener {
         db = new DatabaseManager(this);
 
         drw = (DrawerLayout) findViewById(R.id.drawer_layout);
-        (btBackup  = (Button) findViewById(R.id.bt_backup)).setOnClickListener(this);
-        (btRestore  = (Button) findViewById(R.id.bt_restore)).setOnClickListener(this);
+        (btBackup = (Button) findViewById(R.id.bt_backup)).setOnClickListener(this);
+        (btRestore = (Button) findViewById(R.id.bt_restore)).setOnClickListener(this);
+        (btReset = (Button) findViewById(R.id.bt_reset_note)).setOnClickListener(this);
 
         //Khởi tạo view
         showFrgMain();
@@ -60,12 +63,17 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     private void backupAllDatabase() {
         // TODO: 8/31/2016 Backup data chưa sử dụng asyncTask
-                db.backupAllNote();
+        db.backupAllNote();
     }
 
     private void restoreAllDatabase() {
         // TODO: 8/31/2016 Backup data chưa sử dụng asyncTask
-                db.restoreAllNote();
+        db.restoreAllNote();
+    }
+
+    private void resetAllDataBase() {
+        db.delTable();
+        showFrgMain();
     }
 
     private void initOpenCV() {
@@ -90,9 +98,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private void showFrgMain() {
         removeAllFragment();
         // TODO: 8/31/2016 Update data recycle view chưa sử dụng notifyDataSetChange
-        frgMain = new FragmentMain(db.readAllData());
+        Cursor noteDb = db.readAllData();
+        frgMain = new FragmentMain(noteDb);
         getFragmentManager().beginTransaction()
-                .replace(R.id.activity_main, frgMain).commit();
+                .replace(R.id.activity_main, frgMain)
+                .commit();
     }
 
     public void showFrgAddNote() {
@@ -115,6 +125,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         frgEdit = new FrgEdit(title, content);
         getFragmentManager().beginTransaction()
                 .add(R.id.activity_main, frgEdit)
+                .hide(frgMain)
                 .commit();
     }
 
@@ -209,15 +220,20 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     @Override
     public void onClick(View view) {
-        switch (view.getId()){
+        switch (view.getId()) {
             case R.id.bt_backup:
                 backupAllDatabase();
                 break;
             case R.id.bt_restore:
                 restoreAllDatabase();
                 break;
+            case R.id.bt_reset_note:
+                Log.d(TAG, "onClick: ");
+                resetAllDataBase();
+                break;
             default:
                 break;
         }
     }
+
 }
