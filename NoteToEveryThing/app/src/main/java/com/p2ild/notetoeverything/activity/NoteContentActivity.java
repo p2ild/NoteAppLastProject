@@ -2,7 +2,6 @@ package com.p2ild.notetoeverything.activity;
 
 import android.app.Activity;
 import android.database.Cursor;
-import android.media.Image;
 import android.os.Bundle;
 import android.support.v4.view.ViewPager;
 import android.view.View;
@@ -10,8 +9,8 @@ import android.widget.ImageButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.p2ild.notetoeverything.DatabaseManager;
-import com.p2ild.notetoeverything.Adapter.MyPagerAdapter;
+import com.p2ild.notetoeverything.other.DatabaseManager;
+import com.p2ild.notetoeverything.adapter.MyPagerAdapter;
 import com.p2ild.notetoeverything.R;
 
 /**

@@ -1,4 +1,4 @@
-package com.p2ild.notetoeverything;
+package com.p2ild.notetoeverything.other;
 
 import android.Manifest;
 import android.content.Context;
@@ -10,7 +10,6 @@ import android.net.wifi.WifiManager;
 import android.os.Bundle;
 import android.os.Handler;
 import android.support.v4.app.ActivityCompat;
-import android.util.Log;
 
 /**
  * Created by duypi on 8/26/2016.

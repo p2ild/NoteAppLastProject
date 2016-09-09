@@ -1,4 +1,4 @@
-package com.p2ild.notetoeverything;
+package com.p2ild.notetoeverything.other;
 
 import android.app.Activity;
 import android.content.Context;
@@ -12,6 +12,8 @@ import android.util.Log;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.p2ild.notetoeverything.R;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
@@ -22,7 +24,6 @@ import java.io.IOException;
  * Created by duypi on 8/20/2016.
  */
 public class DatabaseManager extends SQLiteOpenHelper {
-
     public static final String NAME_COLUMN_TITLE_NOTE = "title_note";
     public static final String NAME_COLUMN_CONTENT_NOTE = "content_note";
     public static final String NAME_COLUMN_PATH_IMAGE_NOTE = "path_image_note";
@@ -75,7 +76,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
 
     public DatabaseManager(Context context) {
         super(context, DATABASE_NAME, null, VERSION);
-        db = this.getWritableDatabase();
+        db = getWritableDatabase();
         this.context = context;
         createTableIfNotExists();
     }

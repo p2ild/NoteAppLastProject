@@ -1,4 +1,4 @@
-package com.p2ild.notetoeverything.Adapter;
+package com.p2ild.notetoeverything.adapter;
 
 import android.database.Cursor;
 import android.support.v4.view.PagerAdapter;
@@ -11,7 +11,7 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.Priority;
-import com.p2ild.notetoeverything.DatabaseManager;
+import com.p2ild.notetoeverything.other.DatabaseManager;
 import com.p2ild.notetoeverything.R;
 
 import java.io.File;
@@ -65,7 +65,6 @@ public class MyPagerAdapter extends PagerAdapter {
                 .load(new File(cursor.getString(DatabaseManager.COLUMN_PATH_IMAGE_NOTE)))
 //                .fitCenter()
                 .priority(Priority.IMMEDIATE)
-                .placeholder(R.drawable.placeholder)
                 .into(img);
         container.addView(rootView);
         return rootView;

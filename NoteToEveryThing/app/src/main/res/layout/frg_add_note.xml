@@ -1,35 +1,34 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="vertical" android:layout_width="match_parent"
+    android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/bg_frg_add_note">
+    android:background="@color/bg_frg_add_note"
+    android:orientation="vertical">
 
-        <EditText
-            android:id="@+id/ed_note_title"
-            android:gravity="center"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:hint="Note title"
-            android:background="@drawable/edit_text"
-            android:drawableLeft="@drawable/ic_left_arrow_angle"
-            android:drawableRight="@drawable/ic_camera_lens"
-            android:padding="10dp"
-            android:textSize="25sp"
-            android:textStyle="bold"
-            android:textColor="@color/color_primary_text"
-            android:textColorHint="@color/color_secondary_text"
-            />
+    <EditText
+        android:id="@+id/ed_note_title"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@drawable/edit_text"
+        android:drawableLeft="@drawable/ic_left_arrow_angle"
+        android:drawableRight="@drawable/ic_camera_lens"
+        android:gravity="center"
+        android:hint="Note title"
+        android:padding="10dp"
+        android:textColor="@color/color_primary_text"
+        android:textColorHint="@color/color_secondary_text"
+        android:textSize="25sp"
+        android:textStyle="bold" />
 
     <EditText
         android:id="@+id/ed_note_content"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:padding="10dp"
         android:background="@drawable/edit_text"
         android:hint="Note content"
+        android:padding="10dp"
         android:textColor="@color/color_primary_text"
-        android:textColorHint="@color/color_secondary_text"
-        />
+        android:textColorHint="@color/color_secondary_text" />
 
 
 </LinearLayout>

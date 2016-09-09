@@ -25,12 +25,12 @@ import android.widget.RelativeLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.p2ild.notetoeverything.Adapter.NoteAdapter;
+import com.p2ild.notetoeverything.adapter.NoteAdapter;
 import com.p2ild.notetoeverything.CustomStaggeredGridLayoutManager;
-import com.p2ild.notetoeverything.DatabaseManager;
+import com.p2ild.notetoeverything.other.DatabaseManager;
 import com.p2ild.notetoeverything.R;
 import com.p2ild.notetoeverything.RecycleViewOnItemTouch;
-import com.p2ild.notetoeverything.WifiGpsManager;
+import com.p2ild.notetoeverything.other.WifiGpsManager;
 import com.p2ild.notetoeverything.activity.MainActivity;
 
 

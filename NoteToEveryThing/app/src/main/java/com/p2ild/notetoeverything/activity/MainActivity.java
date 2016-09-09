@@ -2,6 +2,7 @@ package com.p2ild.notetoeverything.activity;
 
 import android.app.Activity;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.Bundle;
 import android.os.Handler;
@@ -9,13 +10,16 @@ import android.support.v4.widget.DrawerLayout;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
+import android.widget.CompoundButton;
 import android.widget.ImageButton;
+import android.widget.Switch;
 import android.widget.Toast;
 
-import com.p2ild.notetoeverything.DatabaseManager;
+import com.p2ild.notetoeverything.AppService;
+import com.p2ild.notetoeverything.other.DatabaseManager;
 import com.p2ild.notetoeverything.R;
 import com.p2ild.notetoeverything.SurfaceView;
-import com.p2ild.notetoeverything.WifiGpsManager;
+import com.p2ild.notetoeverything.other.WifiGpsManager;
 import com.p2ild.notetoeverything.frgment.FragmentMain;
 import com.p2ild.notetoeverything.frgment.FrgAddNote;
 import com.p2ild.notetoeverything.frgment.FrgCapture;
@@ -28,6 +32,8 @@ public class MainActivity extends Activity implements View.OnClickListener {
     public static final String KEY_POSITION = "KEY_POSITION";
     public static final String KEY_OBJECT_DB = "KEY_OBJECT_DB";
     private static final String TAG = MainActivity.class.getSimpleName();
+    private static final String SHARE_PREFERENCE = "SHARE_PREFERENCE";
+    private static final String SWITCH_SERVICE = "SWITCH_SERVICE";
     private FrgAddNote frgAdd;
     private FrgCapture frgCapture;
     private FragmentMain frgMain;
@@ -39,6 +45,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private WifiGpsManager wifiGpsManager;
     private DrawerLayout drw;
     private Button btBackup, btRestore,btReset;
+    private Switch screenShots;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -46,11 +53,38 @@ public class MainActivity extends Activity implements View.OnClickListener {
         setContentView(R.layout.activity_main);
         //Khởi tạo cơ sở dữ liệu load ảnh thêm sửa xóa
         db = new DatabaseManager(this);
-
+        final SharedPreferences sharedPreferences = getSharedPreferences(SHARE_PREFERENCE,MODE_PRIVATE);
         drw = (DrawerLayout) findViewById(R.id.drawer_layout);
         (btBackup = (Button) findViewById(R.id.bt_backup)).setOnClickListener(this);
         (btRestore = (Button) findViewById(R.id.bt_restore)).setOnClickListener(this);
         (btReset = (Button) findViewById(R.id.bt_reset_note)).setOnClickListener(this);
+        (screenShots = (Switch) findViewById(R.id.sw_scr_shot)).setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                SharedPreferences.Editor editor = sharedPreferences.edit();
+                if(b){
+                    startService(new Intent(MainActivity.this, AppService.class));
+                    editor.putString(SWITCH_SERVICE,"on");
+                    editor.commit();
+                }else {
+                    stopService(new Intent(MainActivity.this, AppService.class));
+                    editor.putString(SWITCH_SERVICE,"off");
+                    editor.commit();
+                }
+            }
+        });
+        if(sharedPreferences.getString(SWITCH_SERVICE,null)!=null){
+            switch (sharedPreferences.getString(SWITCH_SERVICE,null)){
+                case "on":
+                    screenShots.setChecked(true);
+                    break;
+                case "off":
+                    screenShots.setChecked(false);
+                    break;
+                default:break;
+            }
+        }
+
 
         //Khởi tạo view
         showFrgMain();

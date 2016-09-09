@@ -28,6 +28,8 @@
         android:layout_height="wrap_content"
         android:text="Sao lưu dữ liệu"
         android:textSize="30sp"
+        android:gravity="start|center"
+        android:padding="10dp"
         android:textColor="@color/text_light"
         android:background="@color/color_tranparent"
         />
@@ -38,6 +40,8 @@
         android:layout_height="wrap_content"
         android:text="Phục hồi dữ liệu"
         android:textSize="20sp"
+        android:gravity="start|center"
+        android:padding="10dp"
         android:textColor="@color/text_light"
         android:background="@color/color_tranparent"
         />
@@ -47,9 +51,19 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="Xóa hết các note đã lưu"
-        android:textSize="10sp"
+        android:textSize="30sp"
+        android:gravity="start|center"
+        android:padding="10dp"
         android:textColor="@color/text_light"
-        android:background="@color/color_tranparent"
-        />
+        android:background="@color/color_tranparent" />
+        <Switch
+            android:id="@+id/sw_scr_shot"
+            android:layout_width="match_parent"
+            android:text="ScreenShot Mode"
+            android:textColor="@color/text_light"
+            android:gravity="start|center"
+            android:padding="10dp"
+            android:layout_height="wrap_content" />
+
 
 </LinearLayout>

@@ -1,4 +1,4 @@
-package com.p2ild.notetoeverything.Adapter;
+package com.p2ild.notetoeverything.adapter;
 
 import android.content.Context;
 import android.database.Cursor;
@@ -16,7 +16,7 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.p2ild.notetoeverything.DatabaseManager;
+import com.p2ild.notetoeverything.other.DatabaseManager;
 import com.p2ild.notetoeverything.R;
 
 import java.io.File;

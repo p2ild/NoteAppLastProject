@@ -49,7 +49,7 @@ public class FrgEdit extends Fragment implements View.OnTouchListener {
         (edContentNote = (EditText) rootView.findViewById(R.id.ed_note_content)).setText(contentNote);
 
         Drawable buttonBack= getResources().getDrawable(R.drawable.ic_left_arrow_angle);
-        Drawable buttonSave= getResources().getDrawable(R.drawable.ic_save);
+        Drawable buttonSave= getResources().getDrawable(R.drawable.ic_save_32px);
         buttonBack.setBounds(new Rect(0,0,buttonBack.getIntrinsicWidth(),buttonBack.getIntrinsicHeight()));
         buttonSave.setBounds(new Rect(0,0,buttonSave.getIntrinsicWidth(),buttonSave.getIntrinsicHeight()));
         edTitleNote.setCompoundDrawables(buttonBack,null,buttonSave,null);
