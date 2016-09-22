@@ -1,20 +1,35 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    android:orientation="horizontal" android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:id="@+id/action_bar"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
     android:background="@drawable/shape_action_bar"
-    android:padding="10dp"
-    >
+    android:orientation="horizontal"
+    android:gravity="center"
+    android:padding="10dp">
 
-    <TextView
-        android:id="@+id/tv_title_action_bar"
+    <ImageButton
+        android:id="@+id/ib_menu"
+        android:layout_centerVertical="true"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        android:src="@drawable/ic_menu" />
+
+    <Spinner
+        android:background="@color/color_action_bar"
+        android:id="@+id/sp_title_action_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="All note"
-        android:paddingLeft="20dp"
-        android:textColor="@color/text_light"
-        android:textSize="30sp"
+        android:layout_toRightOf="@id/ib_menu"
+        android:layout_toLeftOf="@+id/cb_checked"
+        android:gravity="center" />
+    <CheckBox
+        android:id="@+id/cb_checked"
+        android:layout_centerVertical="true"
+        android:button="@drawable/custom_drawable_checkbox"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentRight="true"
         />
-
-</LinearLayout>
+</RelativeLayout>

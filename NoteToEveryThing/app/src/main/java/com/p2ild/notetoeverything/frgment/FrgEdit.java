@@ -14,9 +14,14 @@ import android.view.ViewGroup;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 
+import com.bumptech.glide.Glide;
+import com.bumptech.glide.Priority;
 import com.p2ild.notetoeverything.R;
 import com.p2ild.notetoeverything.activity.MainActivity;
+
+import java.io.File;
 
 /**
  * Created by duypi on 8/25/2016.
@@ -26,16 +31,19 @@ public class FrgEdit extends Fragment implements View.OnTouchListener {
     private static final int BUTTON_CAPTURE = 2;
     private static final int BUTTON_BACK = 0;
     private final String titleNote, contentNote;
+    private final String pathImg;
     private View rootView;
     private Button btSave;
     private EditText edContentNote, edTitleNote;
+    private ImageView img;
     private String oldTitle;
     private InputMethodManager im;
     private Drawable[] buttonDrawable;
 
-    public FrgEdit(String titleNote, String contentNote) {
+    public FrgEdit(String titleNote, String contentNote,String pathImg) {
         this.titleNote = titleNote;
         this.contentNote = contentNote;
+        this.pathImg= pathImg;
     }
 
     @Nullable
@@ -47,7 +55,11 @@ public class FrgEdit extends Fragment implements View.OnTouchListener {
         oldTitle = titleNote;
 
         (edContentNote = (EditText) rootView.findViewById(R.id.ed_note_content)).setText(contentNote);
-
+        img = (ImageView)rootView.findViewById(R.id.iv_img_frg_add_note);
+        Glide.with(getActivity())
+                .load(new File(pathImg))
+                .priority(Priority.IMMEDIATE)
+                .into(img);
         Drawable buttonBack= getResources().getDrawable(R.drawable.ic_left_arrow_angle);
         Drawable buttonSave= getResources().getDrawable(R.drawable.ic_save_32px);
         buttonBack.setBounds(new Rect(0,0,buttonBack.getIntrinsicWidth(),buttonBack.getIntrinsicHeight()));
@@ -98,5 +110,5 @@ public class FrgEdit extends Fragment implements View.OnTouchListener {
         return false;
     }
 
-    // TODO: 8/25/2016(-----Done-----) Chưa xử lý khi ấn back
+    // TODO: 8/25/2016 ---Done--- Chưa xử lý khi ấn back
 }

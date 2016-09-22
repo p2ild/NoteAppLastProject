@@ -6,7 +6,7 @@ import android.graphics.BitmapFactory;
 import android.hardware.Camera;
 import android.media.ThumbnailUtils;
 import android.os.Bundle;
-import android.os.Environment;
+import android.os.FileObserver;
 import android.support.annotation.Nullable;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -17,6 +17,7 @@ import android.widget.ImageButton;
 import com.p2ild.notetoeverything.R;
 import com.p2ild.notetoeverything.SurfaceView;
 import com.p2ild.notetoeverything.activity.MainActivity;
+import com.p2ild.notetoeverything.other.DatabaseManager;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -28,13 +29,11 @@ import java.util.Date;
  * Created by duypi on 8/22/2016.
  */
 public class FrgCapture extends Fragment implements View.OnClickListener {
-    private static final String PATH_INTERNAL = Environment.getDataDirectory() + "/data/" + "com.p2ild.notetoeverything" + "/imageSave/";
     private static final String TAG = FrgCapture.class.getSimpleName();
     private final SimpleDateFormat dateFormat;
     private final Date date;
     private ImageButton btCapture;
     private SurfaceView surfaceView;
-    private String pathImg, pathThumbnailImg, fileNameImage, fileNameImageThumbnail;
     private Camera.PictureCallback takePicture;
 
     public FrgCapture() {
@@ -54,7 +53,7 @@ public class FrgCapture extends Fragment implements View.OnClickListener {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        File file = new File(PATH_INTERNAL);
+        File file = new File(DatabaseManager.PATH_APP_INTERNAL + "/imageSave");
         if (!file.exists()) {
             file.mkdirs();
         }
@@ -62,45 +61,54 @@ public class FrgCapture extends Fragment implements View.OnClickListener {
         takePicture = new Camera.PictureCallback() {
             @Override
             public void onPictureTaken(byte[] bytes, Camera camera) {
-                FileOutputStream op = null;
+
                 try {
+                    String fileNameImage = "note" + dateFormat.format(date) + ".jpg";
+                    final String fileNameImageThumbnail = "note" + dateFormat.format(date) + "_thumbnail.jpg";
+                    final File fileOpImg = new File(DatabaseManager.PATH_APP_INTERNAL + "/imageSave/" + fileNameImage);
+                    final File fileOpThumbnail = new File(DatabaseManager.PATH_APP_INTERNAL + "/imageSave/" + fileNameImageThumbnail);
+                    FileOutputStream opImg = new FileOutputStream(fileOpImg);
+                    FileOutputStream opThumbnail = new FileOutputStream(fileOpThumbnail);
+                    FileObserver fileObserver = new FileObserver(DatabaseManager.PATH_APP_INTERNAL + "/imageSave") {
+                        @Override
+                        public void onEvent(int event, String path) {
+                            Log.d(TAG, "onEvent: "+path);
+                            if (event == FileObserver.CLOSE_WRITE && path.equals(fileNameImageThumbnail)) {
+                                ((MainActivity) getActivity()).showFrgAddNote(fileOpImg.getPath(), fileOpThumbnail.getPath(),DatabaseManager.TYPE_CAPTURE);
+                                this.stopWatching();
+                            }
+                        }
+                    };
+                    fileObserver.startWatching();
                     //Lưu file gốc
-                    op = new FileOutputStream(PATH_INTERNAL + fileNameImage);
-                    op.write(bytes);
-                    op.close();
+
+                    opImg.write(bytes);
+                    opImg.close();
 
                     //Lưu file thumbnail
-                    op = new FileOutputStream(PATH_INTERNAL + fileNameImageThumbnail);
+
                     int width = (int) (camera.getParameters().getPictureSize().width / 7);
                     int height = (int) (camera.getParameters().getPictureSize().height / 7);
                     Bitmap bitmap = ThumbnailUtils.extractThumbnail(BitmapFactory.decodeByteArray(bytes, 0, bytes.length), width, height);
-                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, op);
-                    op.close();
+                    bitmap.compress(Bitmap.CompressFormat.JPEG, 100, opThumbnail);
+                    opThumbnail.close();
                 } catch (IOException e) {
                     Log.d(TAG, "EXCEPTION");
                     e.printStackTrace();
                 }
+                camera.stopPreview();
+                camera.release();
             }
         };
     }
 
     public void saveImgToInternal() {
-        fileNameImage = "note" + dateFormat.format(date) + ".jpg";
-        fileNameImageThumbnail = "note" + dateFormat.format(date) + "_thumbnail.jpg";
         surfaceView.getCamera().takePicture(null, null, takePicture);
     }
 
     @Override
     public void onClick(View view) {
         saveImgToInternal();
-        preview();
     }
-
-    private void preview() {
-        pathImg = PATH_INTERNAL + fileNameImage;
-        pathThumbnailImg = PATH_INTERNAL + fileNameImageThumbnail;
-        ((MainActivity) getActivity()).insertToDataBase(pathImg, pathThumbnailImg);
-    }
-
-    // TODO: 8/25/2016(-----Done-----) Chưa xử lý khi ấn back
+    // TODO: 8/25/2016 ---Done--- Chưa xử lý khi ấn back
 }

@@ -11,7 +11,7 @@
         android:layout_height="wrap_content"
         android:background="@drawable/edit_text"
         android:drawableLeft="@drawable/ic_left_arrow_angle"
-        android:drawableRight="@drawable/ic_camera_lens"
+        android:drawableRight="@drawable/ic_camera_lens_32dp"
         android:gravity="center"
         android:hint="Note title"
         android:padding="10dp"
@@ -29,6 +29,10 @@
         android:padding="10dp"
         android:textColor="@color/color_primary_text"
         android:textColorHint="@color/color_secondary_text" />
-
+    <ImageView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/iv_img_frg_add_note"
+        />
 
 </LinearLayout>

@@ -1,19 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.v4.widget.DrawerLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
+<android.support.v4.widget.DrawerLayout
     android:background="@color/text_light"
-    android:id="@+id/drawer_layout">
+    android:id="@+id/drawer_layout"
+    android:layout_height="match_parent"
+    android:layout_width="match_parent"
+    xmlns:android="http://schemas.android.com/apk/res/android">
+
     <include
-        layout="@layout/drawer_content"
-        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        />
+        android:layout_width="match_parent"
+        layout="@layout/drawer_content" />
+
     <include
-        layout="@layout/drawer_menu"
         android:layout_gravity="left"
-        android:layout_width="match_parent"
         android:layout_height="match_parent"
-        />
+        android:layout_width="match_parent"
+        layout="@layout/drawer_menu" />
 </android.support.v4.widget.DrawerLayout>

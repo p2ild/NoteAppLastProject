@@ -43,10 +43,23 @@ public class SurfaceView extends android.view.SurfaceView implements SurfaceHold
         Log.d(TAG, "CreateSurface");
 
         //Camera preview
-        camera=null;
+        camera = null;
         camera = camera.open();
         surfaceHolder.setType(SurfaceHolder.SURFACE_TYPE_PUSH_BUFFERS);
         setCamera(surfaceHolder);
+    }
+
+    @Override
+    public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
+    }
+
+    @Override
+    public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
+
+    }
+
+    public Camera getCamera() {
+        return camera;
     }
 
     public void setCamera(SurfaceHolder surfaceHolder) {
@@ -62,18 +75,5 @@ public class SurfaceView extends android.view.SurfaceView implements SurfaceHold
                 e.printStackTrace();
             }
         }
-    }
-
-    @Override
-    public void surfaceChanged(SurfaceHolder surfaceHolder, int i, int i1, int i2) {
-    }
-
-    @Override
-    public void surfaceDestroyed(SurfaceHolder surfaceHolder) {
-
-    }
-
-    public Camera getCamera() {
-        return camera;
     }
 }

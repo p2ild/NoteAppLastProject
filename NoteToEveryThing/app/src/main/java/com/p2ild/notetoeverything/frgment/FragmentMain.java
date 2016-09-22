@@ -5,6 +5,7 @@ import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.AsyncTask;
 import android.os.Build;
@@ -13,25 +14,35 @@ import android.os.Handler;
 import android.os.SystemClock;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.view.ViewTreeObserver;
 import android.view.animation.Animation;
 import android.view.animation.AnimationUtils;
+import android.widget.AdapterView;
+import android.widget.CheckBox;
+import android.widget.CompoundButton;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.RelativeLayout;
+import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.p2ild.notetoeverything.adapter.NoteAdapter;
 import com.p2ild.notetoeverything.CustomStaggeredGridLayoutManager;
-import com.p2ild.notetoeverything.other.DatabaseManager;
 import com.p2ild.notetoeverything.R;
 import com.p2ild.notetoeverything.RecycleViewOnItemTouch;
-import com.p2ild.notetoeverything.other.WifiGpsManager;
 import com.p2ild.notetoeverything.activity.MainActivity;
+import com.p2ild.notetoeverything.adapter.NoteAdapter;
+import com.p2ild.notetoeverything.adapter.SpinnerAdapterTypeSave;
+import com.p2ild.notetoeverything.other.DatabaseManager;
+import com.p2ild.notetoeverything.other.WifiGpsManagerActivity;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
+
+import java.util.ArrayList;
 
 
 /**
@@ -45,10 +56,14 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
     private static final int BUTTON_DELETE = 3;
     private static final int BUTTON_SHARE = 4;
     private static final int BUTTON_UNSELECTED = 0;
+    private static final String SHARE_PREFERENCE = "SHARE_PREFERENCE";
+    private static final String KEY_TYPE_SAVE = "KEY_TYPE_SAVE";
+    private final DatabaseManager db;
+    private final String typeSavePara;
     private Cursor cursor;
     private View rootView;
     private RecyclerView rcv;
-    private LinearLayout llActionBar;
+    private RelativeLayout llActionBar;
     private ImageButton btAddNote;
     private RelativeLayout rlFloatOption;
     private ImageButton ibEdit, ibAlarm, ibDelete, ibShare;
@@ -59,7 +74,7 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
     private float xMinIbDelete, yMinIbDelete, xMaxIbDelete, yMaxIbDelete;
     private float xMinIbShare, yMinIbShare, xMaxIbShare, yMaxIbShare;
     private int widthScreen, heightScreen;
-    private WifiGpsManager wifiGpsManager;
+    private WifiGpsManagerActivity wifiGpsManager;
     private Handler handler;
     private RecyclerView.OnItemTouchListener rcvOnItemTouchListioner;
     private CustomStaggeredGridLayoutManager customStaggeredGridLayoutManager;//Custom view cho phép dừng hoặc tiếp tục scroll recycleView
@@ -69,9 +84,23 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
     private int widthFloatOption;
     private Animation animation;
     private AsyncTask animRunOnce;
+    private ImageButton ibMenu;
+    private boolean multiSelect;
+    private CheckBox cb;
+    private Spinner spinner;
+    private EventBus eventBus;
+    private CharSequence saveTvSpinner;
 
-    public FragmentMain(Cursor cursor) {
-        this.cursor = cursor;
+    public FragmentMain(DatabaseManager db, String typeSave) {
+        eventBus = EventBus.getDefault();
+        eventBus.register(this);
+        this.db = db;
+        this.typeSavePara = typeSave;
+        if (typeSave == "") {
+            this.cursor = db.readAllData("All");
+        } else {
+            this.cursor = db.readAllData(typeSave);
+        }
     }
 
     @Override
@@ -88,6 +117,7 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.frg_layout_main, container, false);
         noteAdapter = new NoteAdapter(getActivity(), cursor);
+        multiSelect = false;
         initViewChild();
         return rootView;
     }
@@ -99,53 +129,79 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
 
     private void initViewChild() {
         (btAddNote = (ImageButton) rootView.findViewById(R.id.bt_add_note)).setOnClickListener(this);
+        (ibMenu = (ImageButton) rootView.findViewById(R.id.ib_menu)).setOnClickListener(this);
 
-        // TODO: 8/31/2016 Chưa đặt snipper
-        ((TextView) rootView.findViewById(R.id.tv_title_action_bar)).setText("All note( " + cursor.getCount() + " )");
+        // TODO: 8/31/2016 ---Done---Chưa đặt snipper
+        initSnipper();
+
         animation = AnimationUtils.loadAnimation(getActivity(), R.anim.float_option);
         isLongClick = false;
 
-        wifiGpsManager = new WifiGpsManager(getActivity());
+        initRcv();
 
+        //init Float Option
+        rlFloatOption = (RelativeLayout) rootView.findViewById(R.id.rl_float_option);
+//        rlFloatOption.setVisibility(View.GONE);
+        ibEdit = (ImageButton) rootView.findViewById(R.id.ib_pencil);
+        ibAlarm = (ImageButton) rootView.findViewById(R.id.ib_alarm);
+        ibDelete = (ImageButton) rootView.findViewById(R.id.ib_recycling);
+        ibShare = (ImageButton) rootView.findViewById(R.id.ib_share);
+
+        llActionBar = (RelativeLayout) rootView.findViewById(R.id.action_bar);
+    }
+
+    private void initRcv() {
         //init Recycle View
         rcv = (RecyclerView) rootView.findViewById(R.id.rcv);
         rcv.setHasFixedSize(true);
         customStaggeredGridLayoutManager = new CustomStaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
         rcv.setLayoutManager(customStaggeredGridLayoutManager);
         customStaggeredGridLayoutManager.setCanScroll(true);
-
-
+        (cb = (CheckBox) rootView.findViewById(R.id.cb_checked)).setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+            @Override
+            public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
+                if (b) {
+                    multiSelect = true;
+                } else {
+                    multiSelect = false;
+                }
+            }
+        });
         rcv.setAdapter(noteAdapter);
         rcvOnItemTouchListioner = new RecycleViewOnItemTouch(getActivity(), rcv, new RecycleViewOnItemTouch.onItemClick() {
-            // TODO: 8/25/2016  (-----Done-----) Chưa xử lý code long press khi action up thì option float sẽ biến mất
+            // TODO: 8/25/2016 ---Done--- Chưa xử lý code long press khi action up thì option float sẽ biến mất
             @Override
             public void onClick(View view, int position) {
-                ((MainActivity) getActivity()).startNoteActivity(position);
+                ((MainActivity) getActivity()).startNoteActivity(((NoteAdapter) rcv.getAdapter()).getArrData(), position);
             }
 
             /*Hiện float option*/
             @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
             @Override
             public void onLongClick(View view, int position, final float rawX, final float rawY) {
-                // TODO: 8/26/2016 Lần đầu tiên load float option sai vị trí
-                isLongClick = true;
-                widthScreen = getResources().getDisplayMetrics().widthPixels;
-                heightScreen = getResources().getDisplayMetrics().widthPixels;
-                rlFloatOption.setVisibility(View.VISIBLE);
-                rlFloatOption.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
-                    @Override
-                    public void onGlobalLayout() {
-                        widthFloatOption = rlFloatOption.getWidth();
-                        heightFloatOption = rlFloatOption.getHeight();
-                        rlFloatOption.setTranslationX(rawX - widthFloatOption / 2);
-                        rlFloatOption.setTranslationY(rawY - 200 - heightFloatOption / 2);
-                    }
-                });
-                rlFloatOption.startAnimation(animation);
-                positionCurrentItem = cursor.getCount() - 1 - position;
-                customStaggeredGridLayoutManager.setCanScroll(false);
+                // TODO: 8/26/2016 ---Done--- Lần đầu tiên load float option sai vị trí
+                if (multiSelect) {
+                    ((customStaggeredGridLayoutManager.getChildAt(position))).setVisibility(View.GONE);
+                } else {
+                    isLongClick = true;
+                    widthScreen = getResources().getDisplayMetrics().widthPixels;
+                    heightScreen = getResources().getDisplayMetrics().widthPixels;
+                    rlFloatOption.setVisibility(View.VISIBLE);
+                    rlFloatOption.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
+                        @Override
+                        public void onGlobalLayout() {
+                            widthFloatOption = rlFloatOption.getWidth();
+                            heightFloatOption = rlFloatOption.getHeight();
+                            rlFloatOption.setTranslationX(rawX - widthFloatOption / 2);
+                            rlFloatOption.setTranslationY(rawY - 200 - heightFloatOption / 2);
+                        }
+                    });
+                    rlFloatOption.startAnimation(animation);
+                    positionCurrentItem = cursor.getCount() - 1 - position;
+                    customStaggeredGridLayoutManager.setCanScroll(false);
 
-                setDefaultDrawableImageButton();
+                    setDefaultDrawableImageButton();
+                }
             }
 
             @Override
@@ -166,19 +222,16 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
                         break;
                     case BUTTON_ALARM:
                         startAnimRotate(BUTTON_ALARM);
-//                        YoYo.with(Techniques.RotateIn).duration(500).playOn(ibAlarm);
                         ibAlarm.setImageResource(R.drawable.ic_alarm_clock_focus);
                         buttonFloatOption = BUTTON_UNSELECTED;
                         break;
                     case BUTTON_SHARE:
                         startAnimRotate(BUTTON_SHARE);
-//                        YoYo.with(Techniques.RotateIn).duration(500).playOn(ibDelete);
                         ibShare.setImageResource(R.drawable.ic_share_focus);
                         buttonFloatOption = BUTTON_UNSELECTED;
                         break;
                     case BUTTON_DELETE:
                         startAnimRotate(BUTTON_DELETE);
-//                        YoYo.with(Techniques.RotateIn).duration(500).playOn(ibDelete);
                         ibDelete.setImageResource(R.drawable.ic_recycling_focus);
                         buttonFloatOption = BUTTON_UNSELECTED;
                         break;
@@ -187,8 +240,9 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
                         break;
                 }
             }
+
             @Override
-            public void onActionUp(float rawX, float rawY) {
+            public void onActionUp(float rawX, float rawY, int position) {
                 if (!isLongClick) {
                     return;
                 }
@@ -199,7 +253,8 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
                         cursor.moveToPosition(positionCurrentItem);
                         String title = cursor.getString(DatabaseManager.COLUMN_TITLE_NOTE);
                         String content = cursor.getString(DatabaseManager.COLUMN_CONTENT_NOTE);
-                        ((MainActivity) getActivity()).showFrgEdit(title, content);
+                        String pathImg = cursor.getString(DatabaseManager.COLUMN_PATH_IMAGE_NOTE);
+                        ((MainActivity) getActivity()).showFrgEdit(title, content,pathImg);
                         break;
                     case BUTTON_ALARM:
                         // TODO: 8/25/2016 Chưa xử lý code báo thức cho note
@@ -220,7 +275,11 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
                                 String noteTitleDelete = cursor.getString(DatabaseManager.COLUMN_TITLE_NOTE);
-                                ((MainActivity) getActivity()).deleteDb(noteTitleDelete);
+                                String noteContentDelete = cursor.getString(DatabaseManager.COLUMN_CONTENT_NOTE);
+                                String noteImg = cursor.getString(DatabaseManager.COLUMN_PATH_IMAGE_NOTE);
+                                String noteThumbnail = cursor.getString(DatabaseManager.COLUMN_PATH_THUMBNAIL_IMAGE_NOTE);
+                                String typeSave = cursor.getString(DatabaseManager.COLUMN_TYPE_SAVE);
+                                ((MainActivity) getActivity()).deleteDb(noteTitleDelete,noteContentDelete, noteImg, noteThumbnail,typeSave);
                                 alertDialog.dismiss();
                             }
                         });
@@ -244,17 +303,78 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
             }
         });
         rcv.addOnItemTouchListener(rcvOnItemTouchListioner);
-
-        //init Float Option
-        rlFloatOption = (RelativeLayout) rootView.findViewById(R.id.rl_float_option);
-//        rlFloatOption.setVisibility(View.GONE);
-        ibEdit = (ImageButton) rootView.findViewById(R.id.ib_pencil);
-        ibAlarm = (ImageButton) rootView.findViewById(R.id.ib_alarm);
-        ibDelete = (ImageButton) rootView.findViewById(R.id.ib_recycling);
-        ibShare = (ImageButton) rootView.findViewById(R.id.ib_share);
-
-        llActionBar = (LinearLayout) rootView.findViewById(R.id.action_bar);
     }
+
+    private void initSnipper() {
+        ArrayList<String> arrNoteType = new ArrayList<>();
+        arrNoteType.add("All");
+        Cursor allCursor = db.readAllData("All");
+        for (allCursor.moveToFirst(); !allCursor.isAfterLast(); allCursor.moveToNext()) {
+            String typeSave = allCursor.getString(DatabaseManager.COLUMN_TYPE_SAVE);
+            if (!arrNoteType.contains(typeSave)) {
+                arrNoteType.add(typeSave);
+            }
+        }
+
+        final SpinnerAdapterTypeSave spinnerAdapterTypeSave = new SpinnerAdapterTypeSave(getActivity(), android.R.layout.simple_spinner_dropdown_item, arrNoteType);
+        spinner = (Spinner) rootView.findViewById(R.id.sp_title_action_bar);
+        spinner.setAdapter(spinnerAdapterTypeSave);
+        spinner.setSelection(arrNoteType.indexOf(typeSavePara));
+        spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
+                String type = adapterView.getItemAtPosition(i).toString();
+                MainActivity activity = (MainActivity) getActivity();
+                SharedPreferences sharedPreferences = activity.getSharedPreferences(SHARE_PREFERENCE, Context.MODE_PRIVATE);
+                switch (type) {
+                    case DatabaseManager.TYPE_CAPTURE:
+                        sharedPreferences.edit().putString(KEY_TYPE_SAVE, type).commit();//Khi Chụp hoặc lưu ảnh mới sẽ mở lại type cũ lên
+                        cursor = activity.swapDb(type);
+                        noteAdapter.swapData(cursor);
+                        ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
+                        saveTvSpinner =((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).getText();
+
+                        break;
+                    case DatabaseManager.TYPE_CLIP_BOARD:
+                        // TODO: 9/20/2016 ---Done---Hiển thị thiếu clipboard
+                        sharedPreferences.edit().putString(KEY_TYPE_SAVE, type).commit();
+                        cursor = activity.swapDb(type);
+                        noteAdapter.swapData(cursor);
+                        ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
+                        saveTvSpinner =((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).getText();
+                        break;
+                    case DatabaseManager.TYPE_GALLERY:
+                        sharedPreferences.edit().putString(KEY_TYPE_SAVE, type).commit();
+                        cursor = activity.swapDb(type);
+                        noteAdapter.swapData(cursor);
+                        ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
+                        saveTvSpinner =((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).getText();
+                        break;
+                    case DatabaseManager.TYPE_SCREEN_SHOT:
+                        sharedPreferences.edit().putString(KEY_TYPE_SAVE, type).commit();
+                        cursor = activity.swapDb(type);
+                        noteAdapter.swapData(cursor);
+                        ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
+                        break;
+                    case "All":
+                        sharedPreferences.edit().putString(KEY_TYPE_SAVE, "All").commit();
+                        cursor = activity.swapDb("All");
+                        noteAdapter.swapData(cursor);
+                        ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
+                        break;
+                    default:
+                        break;
+                }
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> adapterView) {
+
+            }
+        });
+
+    }
+
     private void startAnimRotate(final int buttonFocus) {
         if (animRunOnce == null) {
             AsyncTask<Void, Integer, Void> animRotate = new AsyncTask<Void, Integer, Void>() {
@@ -385,7 +505,69 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
     public void onClick(View view) {
         switch (view.getId()) {
             case R.id.bt_add_note:
-                ((MainActivity) getActivity()).showFrgAddNote();
+                DialogMethodPickImage dlgPick = new DialogMethodPickImage(getActivity());
+                dlgPick.show();
+                break;
+            case R.id.ib_menu:
+                ((MainActivity) getActivity()).showDrw();
+                break;
+            default:
+                break;
+        }
+    }
+
+    public CustomStaggeredGridLayoutManager getCustomStaggeredGridLayoutManager() {
+        return customStaggeredGridLayoutManager;
+    }
+
+    public RecyclerView getRcv() {
+        return rcv;
+    }
+
+    public RecyclerView.OnItemTouchListener getRcvOnItemTouchListioner() {
+        return rcvOnItemTouchListioner;
+    }
+
+    @Subscribe
+    public void onEvent(Integer[] data) {
+        switch (data[0]) {
+            case DatabaseManager.MSG_UPDATE_PERCENT_BACKUP:
+                try {
+                    // TODO: 9/16/2016 ---Done--- percent progress not set
+                    ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText("Backup : " + data[1] + " %");
+                } catch (java.lang.NullPointerException e) {
+                    Log.d(TAG, "onEvent: Null tý thôi k sao cứ chạy tiếp đi");
+                    Toast.makeText(getActivity(), "Dừng đột ngột trong quá trình backup dữ liệu", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case DatabaseManager.MSG_BACKUP_COMPLETE:
+                try {
+                    ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(saveTvSpinner);
+                } catch (java.lang.NullPointerException e) {
+                    Log.d(TAG, "onEvent: Null tý thôi k sao cứ chạy tiếp đi");
+                    Toast.makeText(getActivity(), "Dừng đột ngột trong quá trình backup dữ liệu", Toast.LENGTH_SHORT).show();
+                }
+                break;
+
+            case DatabaseManager.MSG_UPDATE_PERCENT_RESTORE:
+                try {
+                    ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText("Restore : " + data[1] + " %");
+                } catch (java.lang.NullPointerException e) {
+                    Log.d(TAG, "onEvent: Null tý thôi k sao cứ chạy tiếp đi");
+                    Toast.makeText(getActivity(), "Dừng đột ngột trong quá trình restore dữ liệu", Toast.LENGTH_SHORT).show();
+                }
+                break;
+            case DatabaseManager.MSG_RESTORE_COMPLETE:
+                try {
+                    ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(saveTvSpinner);
+//                    ((TextView) findViewById(R.id.tv_title_action_bar)).setText("ALL NOTE (" + data[1] + ")");
+                } catch (java.lang.NullPointerException e) {
+                    Log.d(TAG, "onEvent: Null tý thôi k sao cứ chạy tiếp đi");
+                    Toast.makeText(getActivity(), "Dừng đột ngột trong quá trình restore dữ liệu", Toast.LENGTH_SHORT).show();
+                }
+                break;
+
+            default:
                 break;
         }
     }

@@ -25,15 +25,20 @@
             android:textSize="25sp"
             android:textStyle="bold" />
 
-        <EditText
-            android:id="@+id/ed_note_content"
+        <ScrollView
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:background="@drawable/edit_text"
-            android:hint="Note content"
-            android:padding="10dp"
-            android:textColor="@color/color_primary_text"
-            android:textColorHint="@color/color_secondary_text" />
+            android:layout_height="70dp">
+            <EditText
+                android:id="@+id/ed_note_content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/edit_text"
+                android:hint="Note content"
+                android:padding="10dp"
+                android:textColor="@color/color_primary_text"
+                android:textColorHint="@color/color_secondary_text" />
+        </ScrollView>
+
 
         <TableRow
             android:layout_marginTop="10dp"

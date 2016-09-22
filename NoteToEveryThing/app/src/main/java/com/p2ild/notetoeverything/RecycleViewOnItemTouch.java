@@ -45,7 +45,7 @@ public class RecycleViewOnItemTouch implements RecyclerView.OnItemTouchListener 
         }
 
         if(onItemClick!=null && e.getAction()==MotionEvent.ACTION_UP){
-            onItemClick.onActionUp(e.getRawX(),e.getRawY());
+            onItemClick.onActionUp(e.getRawX(),e.getRawY(),rv.getChildPosition(childView));
         }
 
         if(onItemClick!=null && e.getAction()==MotionEvent.ACTION_MOVE){
@@ -66,6 +66,6 @@ public class RecycleViewOnItemTouch implements RecyclerView.OnItemTouchListener 
 
         void onActionFocus(float rawX, float rawY);
 
-        void onActionUp(float rawX, float rawY);
+        void onActionUp(float rawX, float rawY,int position);
     }
 }

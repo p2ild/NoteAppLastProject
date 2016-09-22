@@ -12,6 +12,8 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.CheckBox;
+import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
@@ -23,6 +25,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.Collection;
 
 /**
  * Created by duypi on 8/20/2016.
@@ -33,10 +37,12 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.Holder> implem
     private final Context context;
     private Cursor cursor;
     private Bitmap bitmap;
+    private ArrayList<NoteItem> data;
 
     public NoteAdapter(Context context,Cursor cursor) {
         this.context = context;
         this.cursor = cursor;
+        data = cursorToArrayList(cursor);
     }
 
     @Override
@@ -48,23 +54,29 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.Holder> implem
 
     @Override
     public void onBindViewHolder(Holder holder, int position) {
-        cursor.moveToPosition(cursor.getCount()-1-position);
-        Log.d(TAG, "onBindViewHolder: image thumbnail path: "+cursor.getString(DatabaseManager.COLUMN_PATH_THUMBNAIL_IMAGE_NOTE));
-        holder.tvTitleNote.setText(cursor.getString(DatabaseManager.COLUMN_TITLE_NOTE));
-        holder.tvContentNote.setText(cursor.getString(DatabaseManager.COLUMN_CONTENT_NOTE));
-        Glide
-                .with(context)
-                .load(new File(cursor.getString(DatabaseManager.COLUMN_PATH_THUMBNAIL_IMAGE_NOTE)))
-                .placeholder(R.drawable.placeholder)
-                .crossFade()
-                .thumbnail(0.5f)
-                .into(holder.imgPreview);
+        holder.tvTitleNote.setText(data.get(position).getNoteTitle());
+        holder.tvContentNote.setText(data.get(position).getNoteContent());
+        if(data.get(position).getPathThumbnail().equals("")){
+            holder.tvTitleNote.setText("[ClipBoard]"+holder.tvTitleNote.getText());
+            holder.imgPreview.setVisibility(View.GONE);
+        }
+        else {
+            String pathThumbnail =(data.get(position).getPathThumbnail());
+            Glide
+                    .with(context)
+                    .load(new File(pathThumbnail))
+                    .placeholder(R.drawable.placeholder)
+                    .crossFade()
+                    .thumbnail(0.5f)
+                    .into(holder.imgPreview);
+        }
+
         holder.card.setOnTouchListener(this);
     }
 
     @Override
     public int getItemCount() {
-        return cursor.getCount();
+        return data.size();
     }
 
     @Override
@@ -96,18 +108,41 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.Holder> implem
         return bitmap;
     }
 
+    public ArrayList<NoteItem> getArrData() {
+        return data;
+    }
+
     public class Holder extends RecyclerView.ViewHolder {
         public TextView tvTitleNote, tvContentNote;
         public ImageView imgPreview;
         public CardView card;
+        public ImageButton cbCheck;
 
         public Holder(View itemView) {
             super(itemView);
             tvTitleNote = (TextView) itemView.findViewById(R.id.tv_title_note);
             tvContentNote = (TextView) itemView.findViewById(R.id.tv_content_note);
             imgPreview = (ImageView) itemView.findViewById(R.id.img_preview);
-
+            cbCheck = (ImageButton)itemView.findViewById(R.id.ib_check) ;
             card = (CardView) itemView.findViewById(R.id.card_view);
         }
+    }
+    public void swapData(Cursor cursor){
+        data.clear();
+        data.addAll(cursorToArrayList(cursor));
+        notifyDataSetChanged();
+    }
+
+    public static ArrayList<NoteItem> cursorToArrayList(Cursor cursor){
+        ArrayList<NoteItem> temp = new ArrayList<>();
+        for(cursor.moveToLast();!cursor.isBeforeFirst();cursor.moveToPrevious()){
+            String noteTitle = cursor.getString(cursor.getColumnIndex(DatabaseManager.NAME_COLUMN_TITLE_NOTE));
+            String noteContent = cursor.getString(cursor.getColumnIndex(DatabaseManager.NAME_COLUMN_CONTENT_NOTE));
+            String notePathImg = cursor.getString(cursor.getColumnIndex(DatabaseManager.NAME_COLUMN_PATH_IMAGE_NOTE));
+            String notePathThumbnail = cursor.getString(cursor.getColumnIndex(DatabaseManager.NAME_COLUMN_PATH_THUMBNAIL_IMAGE_NOTE));
+            String noteTypeSave = cursor.getString(cursor.getColumnIndex(DatabaseManager.NAME_COLUMN_TYPE_SAVE));
+            temp.add(new NoteItem(noteTitle,noteContent,notePathImg,notePathThumbnail,noteTypeSave));
+        }
+        return temp;
     }
 }
