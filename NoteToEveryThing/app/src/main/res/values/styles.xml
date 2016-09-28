@@ -1,5 +1,10 @@
 <resources>
 
     <!-- Base application theme. -->
+    <style name="AppThem" parent="Theme.AppCompat.Light.NoActionBar">
+        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
+        <item name="colorPrimary">@color/colorPrimary</item>
+        <item name="android:windowFullscreen">true</item>
+    </style>
 
 </resources>

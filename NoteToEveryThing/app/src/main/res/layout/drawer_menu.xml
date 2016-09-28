@@ -22,71 +22,80 @@
             android:textStyle="bold" />
     </RelativeLayout>
 
-    <Switch
-        android:id="@+id/sw_scr_shot"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="start|center"
-        android:padding="10dp"
-        android:text="ScreenShot Mode"
-        android:textColor="@color/text_light"
-        android:textSize="20sp" />
+        android:layout_height="match_parent">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <Switch
+                android:id="@+id/sw_scr_shot"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="start|center"
+                android:padding="10dp"
+                android:text="ScreenShot Mode"
+                android:textColor="@color/text_light"
+                android:textSize="20sp" />
 
-    <Switch
-        android:id="@+id/sw_clip_board"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:gravity="start|center"
-        android:padding="10dp"
-        android:text="Clipboard Mode"
-        android:textColor="@color/text_light"
-        android:textSize="20sp" />
+            <Switch
+                android:id="@+id/sw_clip_board"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:gravity="start|center"
+                android:padding="10dp"
+                android:text="Clipboard Mode"
+                android:textColor="@color/text_light"
+                android:textSize="20sp" />
 
-    <Button
-        android:id="@+id/bt_backup"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/color_tranparent"
-        android:gravity="start|center"
-        android:padding="10dp"
-        android:text="Sao lưu dữ liệu"
-        android:textAlignment="center"
-        android:textColor="@color/text_light"
-        android:textSize="20sp" />
+            <Button
+                android:id="@+id/bt_backup"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/color_tranparent"
+                android:gravity="start|center"
+                android:padding="10dp"
+                android:text="Sao lưu dữ liệu"
+                android:textAlignment="center"
+                android:textColor="@color/text_light"
+                android:textSize="20sp" />
 
-    <Button
-        android:id="@+id/bt_restore"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/color_tranparent"
-        android:gravity="start|center"
-        android:padding="10dp"
-        android:text="Phục hồi dữ liệu"
-        android:textAlignment="center"
-        android:textColor="@color/text_light"
-        android:textSize="20sp" />
+            <Button
+                android:id="@+id/bt_restore"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/color_tranparent"
+                android:gravity="start|center"
+                android:padding="10dp"
+                android:text="Phục hồi dữ liệu"
+                android:textAlignment="center"
+                android:textColor="@color/text_light"
+                android:textSize="20sp" />
 
-    <Button
-        android:id="@+id/bt_reset_note"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/color_tranparent"
-        android:gravity="start|center"
-        android:padding="10dp"
-        android:text="Xóa hết các note đã lưu"
-        android:textAlignment="center"
-        android:textColor="@color/text_light"
-        android:textSize="20sp"/>
-    <Button
-        android:id="@+id/bt_map_view"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@color/color_tranparent"
-        android:gravity="start|center"
-        android:padding="10dp"
-        android:text="MapView"
-        android:textAlignment="center"
-        android:textColor="@color/text_light"
-        android:textSize="20sp" />
+            <Button
+                android:id="@+id/bt_reset_note"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/color_tranparent"
+                android:gravity="start|center"
+                android:padding="10dp"
+                android:text="Xóa hết các note đã lưu"
+                android:textAlignment="center"
+                android:textColor="@color/text_light"
+                android:textSize="20sp"/>
+            <Button
+                android:id="@+id/bt_map_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/color_tranparent"
+                android:gravity="start|center"
+                android:padding="10dp"
+                android:text="MapView"
+                android:textAlignment="center"
+                android:textColor="@color/text_light"
+                android:textSize="20sp" />
+        </LinearLayout>
+    </ScrollView>
 
 </LinearLayout>

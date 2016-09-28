@@ -1,11 +1,13 @@
 package com.p2ild.notetoeverything.activity;
 
-import android.app.Activity;
+import android.Manifest;
+import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
@@ -16,29 +18,31 @@ import android.os.FileObserver;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.provider.Settings;
+import android.support.v4.content.ContextCompat;
 import android.support.v4.widget.DrawerLayout;
+import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.Gravity;
-import android.view.LayoutInflater;
 import android.view.View;
-import android.view.Window;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.ImageButton;
 import android.widget.Switch;
 import android.widget.Toast;
 
-import com.p2ild.notetoeverything.AppService;
+import com.p2ild.notetoeverything.service.AppService;
+import com.p2ild.notetoeverything.other.DataSerializable;
+import com.p2ild.notetoeverything.DatabaseManager;
 import com.p2ild.notetoeverything.R;
-import com.p2ild.notetoeverything.adapter.DataSerializable;
 import com.p2ild.notetoeverything.adapter.NoteItem;
+import com.p2ild.notetoeverything.adapter.RecycleNoteAdapter;
 import com.p2ild.notetoeverything.frgment.FragmentMain;
 import com.p2ild.notetoeverything.frgment.FrgAddNote;
 import com.p2ild.notetoeverything.frgment.FrgCapture;
 import com.p2ild.notetoeverything.frgment.FrgEdit;
-import com.p2ild.notetoeverything.other.DatabaseManager;
-import com.p2ild.notetoeverything.other.WifiGpsManagerActivity;
+import com.p2ild.notetoeverything.locationmanager.GeoListioner;
+import com.p2ild.notetoeverything.locationmanager.WifiGpsManagerActivity;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -49,7 +53,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class MainActivity extends Activity implements View.OnClickListener {
+public class MainActivity extends AppCompatActivity implements View.OnClickListener {
 
     public static final String KEY_ARR_DATA = "KEY_ARR_DATA";
     public static final String KEY_OBJECT_DB = "KEY_OBJECT_DB";
@@ -66,14 +70,15 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private static final int SERVICE_DELETE = 666;
     private static final String KEY_SERVICE = "KEY_SERVICE";
     private static final String KEY_TYPE_SAVE = "KEY_TYPE_SAVE";
-    private static final int PERMISSIONS_REQUEST_DRAW_OVER_APP = 888;
+    private static final int REQUEST_PERMISSION_DRAW_OVER_APP = 888;
+    private static final int REQUEST_PERMISSION_STORE_CAMERA = 111;
 
     private ImageButton btAddNote;
 
-    private Button btBackup, btRestore, btReset,btMapView;
+    private Button btBackup, btRestore, btReset, btMapView;
 
     private boolean isExit;
-
+//Binh thuong hom nao a cung ngu muon the nay a
     private WifiGpsManagerActivity wifiGpsManager;
     private DatabaseManager db;
     private DrawerLayout drw;
@@ -84,11 +89,17 @@ public class MainActivity extends Activity implements View.OnClickListener {
 
     private DrawerLayout.DrawerListener myDrawerListener;
     private SharedPreferences sharedPreferences;
+    private FragmentMain frgMain;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
+        WifiGpsManagerActivity.getLocation(this,new GeoListioner(),new GeoListioner());
+
+        checkAppPermission();
+
         dateFormat = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
         date = new Date();
         //Khởi tạo cơ sở dữ liệu load ảnh thêm sửa xóa
@@ -113,26 +124,76 @@ public class MainActivity extends Activity implements View.OnClickListener {
         initOpenCV();
     }
 
+
+    @TargetApi(Build.VERSION_CODES.M)
+    private void checkAppPermission() {
+        if (
+                ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.LOCATION_HARDWARE) != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED
+                || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.SYSTEM_ALERT_WINDOW) != PackageManager.PERMISSION_GRANTED
+                ){
+            Log.d(TAG, "checkAppPermission: ");
+            requestPermissions(new String[]{
+                    Manifest.permission.READ_EXTERNAL_STORAGE
+                    ,Manifest.permission.WRITE_EXTERNAL_STORAGE
+                    ,Manifest.permission.CAMERA
+                    ,Manifest.permission.INTERNET
+            }, REQUEST_PERMISSION_STORE_CAMERA
+            );
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
+        if(requestCode== REQUEST_PERMISSION_STORE_CAMERA){
+            if(grantResults.length>0){
+                for (int i : grantResults){
+                    if(i==PackageManager.PERMISSION_DENIED){
+                        Toast.makeText(MainActivity.this, "Vui lòng đồng ý hết các quyền để chương trình chạy không gặp lỗi", Toast.LENGTH_SHORT).show();
+                        finish();
+                    }
+                }
+            }
+        }
+
+        if(requestCode == REQUEST_PERMISSION_DRAW_OVER_APP){
+            if(grantResults.length>0){
+                for (int i : grantResults){
+                    if(i==PackageManager.PERMISSION_DENIED){
+                        Toast.makeText(MainActivity.this, "Nếu không cho phép quyền này chế độ screen shot và clipboard sẽ không hoạt động", Toast.LENGTH_SHORT).show();
+                        new Handler().postDelayed(new Runnable() {
+                            @Override
+                            public void run() {
+                                finish();
+                            }
+                        },2000);
+                    }
+                }
+            }
+        }
+    }
+
     private void initScreenShot(final SharedPreferences sharedPreferences) {
         (screenShots = (Switch) findViewById(R.id.sw_scr_shot)).setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 if (b) {
-                    Log.d(TAG, "onCheckedChanged: TRUE");
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-                        if(Settings.canDrawOverlays(MainActivity.this)){
+                        if (Settings.canDrawOverlays(MainActivity.this)) {
                             Intent itScreenShot = new Intent(MainActivity.this, AppService.class);
                             startService(itScreenShot);
                             editor.putString(SWITCH_SCREENSHOT, "on");
-                            editor.commit();        
-                        }else {
-                            AlertDialog alertDialog = new AlertDialog.Builder(MainActivity.this).create();
-                            alertDialog.requestWindowFeature(Window.FEATURE_SWIPE_TO_DISMISS);
-                            View view = LayoutInflater.from(MainActivity.this).inflate(R.layout.open_setting,null,false);
-                            alertDialog.setView(view);
-                            alertDialog.show();
-                            screenShots.setChecked(false);
+                            editor.commit();
+                        } else {
+
+                            Toast.makeText(MainActivity.this,"Click NoteToEveryThing and switch Permit drawing over other app",Toast.LENGTH_LONG).show();
+                            startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION));
                         }
                     }
                 } else {
@@ -163,7 +224,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
                 SharedPreferences.Editor editor = sharedPreferences.edit();
                 if (b) {
-                    Log.d(TAG, "onCheckedChanged: ON");
+
                     editor.putString(SWITCH_CLIPBOARD, "on");
                     editor.commit();
                     Intent itClipboard = new Intent(MainActivity.this, AppService.class);
@@ -233,10 +294,11 @@ public class MainActivity extends Activity implements View.OnClickListener {
     private void showFrgMain() {
 //        removeAllFragment();
         // TODO: 8/31/2016 ---Done--- Update data recycle view chưa sử dụng notifyDataSetChange
-        SharedPreferences sharedPreferences = getSharedPreferences(SHARE_PREFERENCE, Context.MODE_PRIVATE);
-        String typeSave = sharedPreferences.getString(KEY_TYPE_SAVE, "");
-        final FragmentMain frgMain = new FragmentMain(db, typeSave);
-        getFragmentManager().beginTransaction()
+//        final FragmentMain frgMain;
+
+            frgMain = new FragmentMain();
+
+        getSupportFragmentManager().beginTransaction()
                 .replace(R.id.activity_main, frgMain)
                 .commit();
 
@@ -256,6 +318,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
                         frgMain.getRcv().removeOnItemTouchListener(onItemTouchListener);
                     }
                 }
+
                 @Override
                 public void onDrawerClosed(View drawerView) {
                     if (!frgMain.isHidden() && frgMain.getRcvOnItemTouchListioner() != null) {
@@ -271,6 +334,22 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 }
             };
         }
+    }
+
+    public DatabaseManager getDb() {
+        if ( db == null ) {
+            Log.d(TAG, "getDb: DB NULL CMNR");
+            db = new DatabaseManager(this, null);
+        }else {
+            Log.d(TAG, "getDb: DB KHONG NULL");
+        }
+        return db;
+    }
+
+    public String getTypeSave() {
+        SharedPreferences sharedPreferences = getSharedPreferences(SHARE_PREFERENCE, Context.MODE_PRIVATE);
+        String typeSave = sharedPreferences.getString(KEY_TYPE_SAVE, "");
+        return typeSave;
     }
 
     public void showFrgAddNote(final String imgPath, final String imgThumbnailPath, final String typeSave) {
@@ -297,7 +376,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     }
 
     public void insertToDataBase(String noteTitle, String noteContent, final String imgPath, final String imgThumbnailPath, final String typeSave) {
-        db.insert(noteTitle, noteContent, imgPath, imgThumbnailPath, typeSave,null);
+        db.insert(noteTitle, noteContent, imgPath, imgThumbnailPath, typeSave, null);
         showFrgMain();
     }
 
@@ -333,7 +412,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
         intent.putExtra(KEY_ARR_DATA, new DataSerializable(data));
         intent.putExtra(KEY_POSTION_CLICK, position);
         startActivity(intent);
-        }
+    }
 
     @Override
     public void onClick(View view) {
@@ -343,11 +422,21 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 itBackup.putExtra(KEY_SERVICE, SERVICE_BACKUP);
                 startService(itBackup);
                 drw.closeDrawer(Gravity.LEFT);
+                String type = sharedPreferences.getString(FragmentMain.KEY_TYPE_SAVE, null);
+                if (type != null) {
+                    frgMain.recycleNoteAdapter.swapData(swapDb(type));
+                }
                 break;
             case R.id.bt_restore:
+                //chay may ao 7.0 thu no chet khong
+//                E lai chua cai thang 7.0 r @@
                 Intent itRestore = new Intent(this, AppService.class);
                 itRestore.putExtra(KEY_SERVICE, SERVICE_RESTORE);
                 startService(itRestore);
+                String type1 = sharedPreferences.getString(FragmentMain.KEY_TYPE_SAVE, null);
+                if (type1 != null) {
+                    frgMain.recycleNoteAdapter.swapData(swapDb(type1));
+                }
                 drw.closeDrawer(Gravity.LEFT);
                 break;
             case R.id.bt_reset_note:
@@ -355,9 +444,10 @@ public class MainActivity extends Activity implements View.OnClickListener {
                 drw.closeDrawer(Gravity.LEFT);
                 break;
             case R.id.bt_map_view:
-                Intent intent = new Intent(MainActivity.this,MapActivity.class);
-                intent.putExtra(KEY_OBJECT_DB, new DataSerializable)
-                startActivity();
+                Intent intent = new Intent(MainActivity.this, MapActivity.class);
+                ArrayList<NoteItem> noteItemArrayList = RecycleNoteAdapter.cursorToArrayList(db.readAllData("All"));
+                intent.putExtra(KEY_OBJECT_DB, new DataSerializable(noteItemArrayList));
+                startActivity(intent);
                 drw.closeDrawer(Gravity.LEFT);
                 break;
             default:
@@ -377,7 +467,7 @@ public class MainActivity extends Activity implements View.OnClickListener {
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // TODO: 9/19/2016 Pick 2 ảnh thành 1 ảnh
-        super.onActivityResult(requestCode, resultCode, data);
+//        super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == REQUEST_PICK_IMAGE && resultCode == RESULT_OK) {
             Log.d(TAG, "onActivityResult: ");

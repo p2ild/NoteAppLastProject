@@ -1,4 +1,4 @@
-package com.p2ild.notetoeverything;
+package com.p2ild.notetoeverything.other;
 
 import android.support.v7.widget.StaggeredGridLayoutManager;
 

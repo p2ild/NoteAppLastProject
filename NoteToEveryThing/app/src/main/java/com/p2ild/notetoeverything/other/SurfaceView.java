@@ -1,4 +1,4 @@
-package com.p2ild.notetoeverything;
+package com.p2ild.notetoeverything.other;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -40,7 +40,6 @@ public class SurfaceView extends android.view.SurfaceView implements SurfaceHold
     /*Implement from Surfaceholder Callback*/
     @Override
     public void surfaceCreated(SurfaceHolder surfaceHolder) {
-        Log.d(TAG, "CreateSurface");
 
         //Camera preview
         camera = null;

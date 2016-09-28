@@ -6,8 +6,7 @@
     android:layout_margin="5dp"
     android:orientation="vertical"
     app:cardCornerRadius="10dp"
-    app:cardPreventCornerOverlap="false"
-    android:id="@+id/card_view">
+    app:cardPreventCornerOverlap="false">
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"

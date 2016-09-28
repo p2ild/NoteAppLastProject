@@ -117,8 +117,7 @@ public class MapManager implements android.location.LocationListener{
         markerOptions.position(position);
         markerOptions.icon(BitmapDescriptorFactory.defaultMarker());
         mGMap.addMarker(markerOptions);
-        goole
-        mGMap.animateCamera(CameraUpdateFactory.newCameraPosition(CameraPosition.fromLatLngZoom(position, 16)));
+//        mGMap.animateCamera(CameraUpdateFactory.newCameraPosition(CameraPosition.fromLatLngZoom(position, 16)));
     }
 
     @Override

@@ -1,4 +1,4 @@
-package com.p2ild.notetoeverything.adapter;
+package com.p2ild.notetoeverything.other;
 
 import java.util.ArrayList;
 

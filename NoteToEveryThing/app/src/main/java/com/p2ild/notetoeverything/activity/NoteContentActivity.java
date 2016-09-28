@@ -1,24 +1,19 @@
 package com.p2ild.notetoeverything.activity;
 
 import android.app.Activity;
-import android.graphics.Color;
-import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
 import android.os.Bundle;
-import android.os.SystemClock;
 import android.support.v4.view.ViewPager;
 import android.util.TypedValue;
 import android.view.View;
 import android.widget.ImageButton;
-import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.p2ild.notetoeverything.R;
-import com.p2ild.notetoeverything.adapter.DataSerializable;
-import com.p2ild.notetoeverything.adapter.MyPagerAdapter;
+import com.p2ild.notetoeverything.other.DataSerializable;
+import com.p2ild.notetoeverything.adapter.MyPagerAdapterActNoteContent;
 import com.p2ild.notetoeverything.adapter.NoteItem;
-import com.p2ild.notetoeverything.other.DatabaseManager;
+import com.p2ild.notetoeverything.DatabaseManager;
 
 import java.util.ArrayList;
 import java.util.Random;
@@ -31,7 +26,7 @@ public class NoteContentActivity extends Activity implements View.OnClickListene
     private ImageButton ibBack, ibAddNote, ibOption;
     private ViewPager vp;
     private DatabaseManager db;
-    private MyPagerAdapter myPagerAdapter;
+    private MyPagerAdapterActNoteContent myPagerAdapterActNoteContent;
     Random rd = new Random();
     private ViewPager.OnPageChangeListener mPageChangeListioner = new ViewPager.OnPageChangeListener() {
         @Override
@@ -41,7 +36,7 @@ public class NoteContentActivity extends Activity implements View.OnClickListene
 
         @Override
         public void onPageSelected(int position) {
-            ((TextView) findViewById(R.id.tv_title_in_content_note)).setText(myPagerAdapter.getPageTitle(position));
+            ((TextView) findViewById(R.id.tv_title_in_content_note)).setText(myPagerAdapterActNoteContent.getPageTitle(position));
         }
 
         @Override
@@ -67,7 +62,7 @@ public class NoteContentActivity extends Activity implements View.OnClickListene
     }
 
     private void initViewPager(ArrayList<NoteItem> arrData, int positionClick) {
-        myPagerAdapter = new MyPagerAdapter(arrData,db);
+        myPagerAdapterActNoteContent = new MyPagerAdapterActNoteContent(arrData);
         vp = (ViewPager) findViewById(R.id.view_pager);
         int itemMargin = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,50,getResources().getDisplayMetrics());
         int pagerPadding = (int) TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_DIP,10,getResources().getDisplayMetrics());
@@ -75,10 +70,10 @@ public class NoteContentActivity extends Activity implements View.OnClickListene
         vp.setClipToPadding(false);
         vp.setPadding(pagerPadding, pagerPadding, pagerPadding, pagerPadding);
         vp.addOnPageChangeListener(mPageChangeListioner);
-        vp.setAdapter(myPagerAdapter);
+        vp.setAdapter(myPagerAdapterActNoteContent);
         vp.setCurrentItem(positionClick);
         // TODO: 8/31/2016 ---Done--- PageTitle load sai
-        ((TextView) findViewById(R.id.tv_title_in_content_note)).setText(myPagerAdapter.getPageTitle(positionClick));
+        ((TextView) findViewById(R.id.tv_title_in_content_note)).setText(myPagerAdapterActNoteContent.getPageTitle(positionClick));
     }
 
     @Override

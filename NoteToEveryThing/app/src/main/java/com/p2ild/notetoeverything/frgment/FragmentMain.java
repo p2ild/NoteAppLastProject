@@ -1,17 +1,16 @@
 package com.p2ild.notetoeverything.frgment;
 
-import android.annotation.TargetApi;
 import android.app.AlertDialog;
-import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.os.AsyncTask;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
+import android.support.annotation.Nullable;
+import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.Log;
@@ -30,14 +29,14 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.p2ild.notetoeverything.CustomStaggeredGridLayoutManager;
+import com.p2ild.notetoeverything.other.CustomStaggeredGridLayoutManager;
+import com.p2ild.notetoeverything.DatabaseManager;
 import com.p2ild.notetoeverything.R;
-import com.p2ild.notetoeverything.RecycleViewOnItemTouch;
+import com.p2ild.notetoeverything.other.RecycleViewOnItemTouch;
 import com.p2ild.notetoeverything.activity.MainActivity;
-import com.p2ild.notetoeverything.adapter.NoteAdapter;
+import com.p2ild.notetoeverything.adapter.RecycleNoteAdapter;
 import com.p2ild.notetoeverything.adapter.SpinnerAdapterTypeSave;
-import com.p2ild.notetoeverything.other.DatabaseManager;
-import com.p2ild.notetoeverything.other.WifiGpsManagerActivity;
+import com.p2ild.notetoeverything.locationmanager.WifiGpsManagerActivity;
 
 import org.greenrobot.eventbus.EventBus;
 import org.greenrobot.eventbus.Subscribe;
@@ -57,9 +56,9 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
     private static final int BUTTON_SHARE = 4;
     private static final int BUTTON_UNSELECTED = 0;
     private static final String SHARE_PREFERENCE = "SHARE_PREFERENCE";
-    private static final String KEY_TYPE_SAVE = "KEY_TYPE_SAVE";
-    private final DatabaseManager db;
-    private final String typeSavePara;
+    public static final String KEY_TYPE_SAVE = "KEY_TYPE_SAVE";
+    private DatabaseManager db;
+    private String typeSavePara;
     private Cursor cursor;
     private View rootView;
     private RecyclerView rcv;
@@ -79,7 +78,7 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
     private RecyclerView.OnItemTouchListener rcvOnItemTouchListioner;
     private CustomStaggeredGridLayoutManager customStaggeredGridLayoutManager;//Custom view cho phép dừng hoặc tiếp tục scroll recycleView
     private boolean isLongClick;//Khônng cho phép ACTION_FOCUS và ACTION_UP thực thi khi chưa LONG_CLICK
-    private NoteAdapter noteAdapter;
+    public RecycleNoteAdapter recycleNoteAdapter;
     private int heightFloatOption;
     private int widthFloatOption;
     private Animation animation;
@@ -91,32 +90,28 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
     private EventBus eventBus;
     private CharSequence saveTvSpinner;
 
-    public FragmentMain(DatabaseManager db, String typeSave) {
+    @Override
+    public void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        inits();
+    }
+
+    private void inits() {
         eventBus = EventBus.getDefault();
         eventBus.register(this);
-        this.db = db;
-        this.typeSavePara = typeSave;
-        if (typeSave == "") {
+
+        this.db = ((MainActivity)getActivity()).getDb();
+        this.typeSavePara = ((MainActivity)getActivity()).getTypeSave();
+        if (typeSavePara.equals("")) {
             this.cursor = db.readAllData("All");
         } else {
-            this.cursor = db.readAllData(typeSave);
+            this.cursor = db.readAllData(typeSavePara);
         }
     }
-
-    @Override
-    public void onAttach(Context context) {
-        super.onAttach(context);
-    }
-
-    @Override
-    public void onDetach() {
-        super.onDetach();
-    }
-
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
         rootView = inflater.inflate(R.layout.frg_layout_main, container, false);
-        noteAdapter = new NoteAdapter(getActivity(), cursor);
+        recycleNoteAdapter = new RecycleNoteAdapter(getActivity(), cursor);
         multiSelect = false;
         initViewChild();
         return rootView;
@@ -167,16 +162,15 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
                 }
             }
         });
-        rcv.setAdapter(noteAdapter);
+        rcv.setAdapter(recycleNoteAdapter);
         rcvOnItemTouchListioner = new RecycleViewOnItemTouch(getActivity(), rcv, new RecycleViewOnItemTouch.onItemClick() {
             // TODO: 8/25/2016 ---Done--- Chưa xử lý code long press khi action up thì option float sẽ biến mất
             @Override
             public void onClick(View view, int position) {
-                ((MainActivity) getActivity()).startNoteActivity(((NoteAdapter) rcv.getAdapter()).getArrData(), position);
+                ((MainActivity) getActivity()).startNoteActivity(((RecycleNoteAdapter) rcv.getAdapter()).getArrData(), position);
             }
 
             /*Hiện float option*/
-            @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
             @Override
             public void onLongClick(View view, int position, final float rawX, final float rawY) {
                 // TODO: 8/26/2016 ---Done--- Lần đầu tiên load float option sai vị trí
@@ -184,8 +178,6 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
                     ((customStaggeredGridLayoutManager.getChildAt(position))).setVisibility(View.GONE);
                 } else {
                     isLongClick = true;
-                    widthScreen = getResources().getDisplayMetrics().widthPixels;
-                    heightScreen = getResources().getDisplayMetrics().widthPixels;
                     rlFloatOption.setVisibility(View.VISIBLE);
                     rlFloatOption.getViewTreeObserver().addOnGlobalLayoutListener(new ViewTreeObserver.OnGlobalLayoutListener() {
                         @Override
@@ -330,7 +322,7 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
                     case DatabaseManager.TYPE_CAPTURE:
                         sharedPreferences.edit().putString(KEY_TYPE_SAVE, type).commit();//Khi Chụp hoặc lưu ảnh mới sẽ mở lại type cũ lên
                         cursor = activity.swapDb(type);
-                        noteAdapter.swapData(cursor);
+                        recycleNoteAdapter.swapData(cursor);
                         ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
                         saveTvSpinner =((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).getText();
 
@@ -339,27 +331,27 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
                         // TODO: 9/20/2016 ---Done---Hiển thị thiếu clipboard
                         sharedPreferences.edit().putString(KEY_TYPE_SAVE, type).commit();
                         cursor = activity.swapDb(type);
-                        noteAdapter.swapData(cursor);
+                        recycleNoteAdapter.swapData(cursor);
                         ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
                         saveTvSpinner =((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).getText();
                         break;
                     case DatabaseManager.TYPE_GALLERY:
                         sharedPreferences.edit().putString(KEY_TYPE_SAVE, type).commit();
                         cursor = activity.swapDb(type);
-                        noteAdapter.swapData(cursor);
+                        recycleNoteAdapter.swapData(cursor);
                         ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
                         saveTvSpinner =((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).getText();
                         break;
                     case DatabaseManager.TYPE_SCREEN_SHOT:
                         sharedPreferences.edit().putString(KEY_TYPE_SAVE, type).commit();
                         cursor = activity.swapDb(type);
-                        noteAdapter.swapData(cursor);
+                        recycleNoteAdapter.swapData(cursor);
                         ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
                         break;
                     case "All":
                         sharedPreferences.edit().putString(KEY_TYPE_SAVE, "All").commit();
                         cursor = activity.swapDb("All");
-                        noteAdapter.swapData(cursor);
+                        recycleNoteAdapter.swapData(cursor);
                         ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
                         break;
                     default:

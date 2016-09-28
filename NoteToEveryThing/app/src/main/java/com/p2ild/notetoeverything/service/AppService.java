@@ -1,4 +1,4 @@
-package com.p2ild.notetoeverything;
+package com.p2ild.notetoeverything.service;
 
 import android.app.Service;
 import android.content.ClipData;
@@ -31,7 +31,8 @@ import android.widget.LinearLayout;
 import android.widget.Toast;
 
 import com.bumptech.glide.Glide;
-import com.p2ild.notetoeverything.other.DatabaseManager;
+import com.p2ild.notetoeverything.DatabaseManager;
+import com.p2ild.notetoeverything.R;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -114,15 +115,13 @@ public class AppService extends Service implements View.OnClickListener {
         primaryClip = clb.getPrimaryClip();
 
         dateFormat = new SimpleDateFormat("yyyy_MM_dd_HH_mm");
-        date = new Date();
     }
 
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
-        Log.d(TAG, "onStartCommand: ");
-
         allwayRunService();
         runServiceIfClick(intent);
+        Log.d(TAG, "runServiceIfClick: AUTO START SERVICE");
         return START_STICKY;
     }
 
@@ -139,7 +138,6 @@ public class AppService extends Service implements View.OnClickListener {
                     databaseManager.delAllDataTable(this);
                     break;
                 default:
-                    Toast.makeText(AppService.this, "SERVICE IS AUTO START", Toast.LENGTH_SHORT).show();
                     break;
             }
         } else {
@@ -149,7 +147,9 @@ public class AppService extends Service implements View.OnClickListener {
 
     private void allwayRunService() {
         //Chế độ chụp màn hình
+        Log.d(TAG, "allwayRunService: ");
         if (sharedPreferences.getString(SWITCH_SCREENSHOT, null) != null) {
+            Log.d(TAG, "allwayRunService: sharepref : "+sharedPreferences.getString(SWITCH_SCREENSHOT, null));
             switch (sharedPreferences.getString(SWITCH_SCREENSHOT, null)) {
                 case "on":
                     getContentResolver().registerContentObserver(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, false, myContentObserver);
@@ -162,6 +162,9 @@ public class AppService extends Service implements View.OnClickListener {
                 default:
                     break;
             }
+        }else {
+            Log.d(TAG, "allwayRunService: sharepref : KHÔNG CÓ KEY SCREENSHOT");
+
         }
 
         //Chế độ clipboard save
@@ -214,7 +217,7 @@ public class AppService extends Service implements View.OnClickListener {
             wmParam.height = h / 3;
             windowManager.updateViewLayout(viewInflate, wmParam);
             img.setVisibility(View.GONE);
-        }else {
+        } else {
             final File screenshot = new File(pathScreenShot);
             Glide.with(getBaseContext())
                     .load(screenshot)
@@ -222,8 +225,8 @@ public class AppService extends Service implements View.OnClickListener {
             fileObserver = new FileObserver(screenshot.getParent()) {
                 @Override
                 public void onEvent(int i, String s) {
-                    Log.d(TAG, "onEvent: i,s: "+i+" path: "+s);
-                    if(i==FileObserver.CLOSE_WRITE && s.equals(screenshot.getName())){
+                    Log.d(TAG, "onEvent: i,s: " + i + " path: " + s);
+                    if (i == FileObserver.CLOSE_WRITE && s.equals(screenshot.getName())) {
                         AsyncTask asyncTask = new AsyncTask() {
                             @Override
                             protected Object doInBackground(Object[] objects) {
@@ -315,12 +318,12 @@ public class AppService extends Service implements View.OnClickListener {
                     final File fileIn = new File(pathScreenShot);
                     File fileOut = new File(DatabaseManager.PATH_APP_INTERNAL + "/imageSave/" + fileName);
                     databaseManager.copyFile(fileIn, fileOut, false);
-                    databaseManager.insert(edNoteTitle.getText().toString(), edNoteContent.getText().toString(), fileOut.getPath(), fileOut.getPath(), DatabaseManager.TYPE_SCREEN_SHOT,null);
+                    databaseManager.insert(edNoteTitle.getText().toString(), edNoteContent.getText().toString(), fileOut.getPath(), fileOut.getPath(), DatabaseManager.TYPE_SCREEN_SHOT, null);
                     fileIn.delete();
-                    Log.d(TAG, "onClick: path file out: "+fileOut.getPath());
+                    Log.d(TAG, "onClick: path file out: " + fileOut.getPath());
                     pathScreenShot = "";
                 } else {
-                    databaseManager.insert(edNoteTitle.getText().toString(), edNoteContent.getText().toString(), "", "", DatabaseManager.TYPE_CLIP_BOARD,null);
+                    databaseManager.insert(edNoteTitle.getText().toString(), edNoteContent.getText().toString(), "", "", DatabaseManager.TYPE_CLIP_BOARD, null);
                 }
 
                 windowManager.removeViewImmediate(viewInflate);
@@ -371,36 +374,37 @@ public class AppService extends Service implements View.OnClickListener {
             String[] project = {MediaStore.Images.ImageColumns.DISPLAY_NAME, MediaStore.Images.ImageColumns.DATA};
             try {
                 Cursor cursor = getContentResolver().query(uri, project, null, null, null);
-                if(cursor!=null){
+                if (cursor != null) {
                     cursor.moveToLast();
                     String fileNameContentProvider = cursor.getString(cursor.getColumnIndex(project[0]));
                     String data = cursor.getString(cursor.getColumnIndex(project[1]));
 
+                    date = new Date();
                     String timeCurrent = dateFormat.format(date);
+                    Log.d(TAG, "onChange: timeCurrent: " + timeCurrent);
                     String year = timeCurrent.split("_")[0];
                     String month = timeCurrent.split("_")[1];
                     String day = timeCurrent.split("_")[2];
-                    String hour =  timeCurrent.split("_")[3];
-                    String minute =  timeCurrent.split("_")[4];
+                    String hour = timeCurrent.split("_")[3];
+                    String minute = timeCurrent.split("_")[4];
 
                 /* Lọc điều kiện khi máy tạo file screenshot
                  * Những screenshot copy từ ngoài vào sẽ k thể trùng thời gian với hệ thống tại lúc này
                  * */
                     if (fileNameContentProvider.contains("Screenshot")
-                            &&fileNameContentProvider.contains(year)
-                            &&fileNameContentProvider.contains(month)
-                            &&fileNameContentProvider.contains(day)
-                            &&fileNameContentProvider.contains(hour)
-                            &&fileNameContentProvider.contains(minute)) {
-                        Log.d(TAG, "onChange: ScreenShot Listioner fileNameContentProvider: "+fileNameContentProvider);
+                            && fileNameContentProvider.contains(year)
+                            && fileNameContentProvider.contains(month)
+                            && fileNameContentProvider.contains(day)
+                            && fileNameContentProvider.contains(hour)
+                            && fileNameContentProvider.contains(minute)) {
+                        Log.d(TAG, "onChange: ScreenShot Listioner fileNameContentProvider: " + fileNameContentProvider);
                         fileName = fileNameContentProvider;
                         pathScreenShot = data;
                         if (onceRunScreenShot) {
                             initView();
                         }
-                    }
-                    else {
-                        Log.d(TAG, "onChange: Doesn't ScreenShot fileNameContentProvider: "+fileNameContentProvider);
+                    } else {
+                        Log.d(TAG, "onChange: Doesn't ScreenShot fileNameContentProvider: " + fileNameContentProvider);
                     }
                 }
             } catch (IllegalStateException e) {

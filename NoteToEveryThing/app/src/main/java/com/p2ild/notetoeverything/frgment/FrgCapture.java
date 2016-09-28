@@ -15,9 +15,9 @@ import android.view.ViewGroup;
 import android.widget.ImageButton;
 
 import com.p2ild.notetoeverything.R;
-import com.p2ild.notetoeverything.SurfaceView;
+import com.p2ild.notetoeverything.other.SurfaceView;
 import com.p2ild.notetoeverything.activity.MainActivity;
-import com.p2ild.notetoeverything.other.DatabaseManager;
+import com.p2ild.notetoeverything.DatabaseManager;
 
 import java.io.File;
 import java.io.FileOutputStream;

@@ -1,21 +1,15 @@
 package com.p2ild.notetoeverything.adapter;
 
-import android.database.Cursor;
-import android.graphics.drawable.Drawable;
 import android.support.v4.view.PagerAdapter;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.EditText;
-import android.widget.ImageButton;
 import android.widget.ImageView;
-import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.Priority;
 import com.p2ild.notetoeverything.R;
-import com.p2ild.notetoeverything.other.DatabaseManager;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -23,18 +17,16 @@ import java.util.ArrayList;
 /**
  * Created by duypi on 8/24/2016.
  */
-public class MyPagerAdapter extends PagerAdapter {
+public class MyPagerAdapterActNoteContent extends PagerAdapter {
 
-    private static final String TAG = MyPagerAdapter.class.getSimpleName();
-    private final DatabaseManager db;
+    private static final String TAG = MyPagerAdapterActNoteContent.class.getSimpleName();
     private ImageView img;
     private ArrayList<NoteItem> data;
     private EditText edNoteContent;
 
-    public MyPagerAdapter(ArrayList<NoteItem> arr, DatabaseManager db) {
+    public MyPagerAdapterActNoteContent(ArrayList<NoteItem> arr) {
         super();
         data = arr;
-        this.db = db;
     }
 
     @Override

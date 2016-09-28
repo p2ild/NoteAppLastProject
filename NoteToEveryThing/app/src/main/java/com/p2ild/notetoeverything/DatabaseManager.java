@@ -1,4 +1,4 @@
-package com.p2ild.notetoeverything.other;
+package com.p2ild.notetoeverything;
 
 import android.app.Service;
 import android.content.Context;
@@ -10,13 +10,12 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 import android.os.AsyncTask;
 import android.os.Environment;
-import android.os.Handler;
 import android.os.Message;
 import android.provider.Settings;
 import android.util.Log;
 import android.widget.Toast;
 
-import com.p2ild.notetoeverything.AppService;
+import com.p2ild.notetoeverything.service.AppService;
 
 import org.greenrobot.eventbus.EventBus;
 
@@ -30,6 +29,13 @@ import java.io.IOException;
  * Created by duypi on 8/20/2016.
  */
 public class DatabaseManager extends SQLiteOpenHelper {
+    // TODO: 9/28/2016 Chuyen sang dung realm
+    //SQLiteOpenHelper, ormlite, is sqlite
+    //tuy ban
+    //cai nao tien thi dung
+    //du lieu minh nho, thi toc do may cai minh kho phan biet
+    //lon thi moi de phan biet.Ok a e hieu r :D
+    //The thang realm kia k phai sqlite  gra
     public static final String NAME_COLUMN_PATH_THUMBNAIL_IMAGE_NOTE = "path_thumbnail_image";
     public static final String NAME_COLUMN_TITLE_NOTE = "title_note";
     public static final String NAME_COLUMN_CONTENT_NOTE = "content_note";
@@ -232,7 +238,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
     }
 
     /*Sửa tất cả các ký tự đặc biệt để khi thêm vào cơ sở dữ liệu k gây lỗi*/
-    private String replaceCharApostrophe(String str) {
+    public String replaceCharApostrophe(String str) {
         String result = str;
         if (str != null && str.contains("'")) {
             str = str.replace("'", "''");
@@ -345,6 +351,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
 
                     //Phục hồi file ảnh vào bộ nhớ
                     for (File pointer : folderImageSave.listFiles()) {
+
                         publishProgress(MSG_UPDATE_PERCENT_RESTORE, percent, folderImageSave.listFiles().length);
                         File imgIn = new File(folderImageSave.getPath() + "/" + pointer.getName());
                         File imgOut = new File(PATH_APP_INTERNAL + "/imageSave/" + pointer.getName());
@@ -394,7 +401,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
                 inputFileDb = getReadableDatabase();
                 inputFileDb = SQLiteDatabase.openDatabase(fileDbIn.getPath(), null, SQLiteDatabase.OPEN_READWRITE);
             }catch (SQLiteCantOpenDatabaseException e){
-                // TODO: 9/20/2016 Hỏi quyền từ người sử dụng
+                // TODO: 9/20/2016 ---Done--- Hỏi quyền từ người sử dụng
                 AsyncTask asyncTask = new AsyncTask() {
                     @Override
                     protected Object doInBackground(Object[] objects) {
@@ -438,6 +445,7 @@ public class DatabaseManager extends SQLiteOpenHelper {
                 cursorCheckExists = db.rawQuery(sqlCheckExit, null);
                 if (cursorCheckExists.getCount() == 0) {
                     Log.d(TAG, "syncDatabaseFile: CHƯA TỒN TẠI");
+                    // TODO: 9/28/2016 Trùng quá nhiều '
                     insert(replaceCharApostrophe(noteTitleReplace), replaceCharApostrophe(noteContentReplace), replaceCharApostrophe(noteImgReplace), replaceCharApostrophe(noteThumbnailReplace), replaceCharApostrophe(typeSaveReplace),replaceCharApostrophe(typeSaveLatlong));
                 } else {
                     Log.d(TAG, "syncDatabaseFile: " + i + " tồn tại rồi");

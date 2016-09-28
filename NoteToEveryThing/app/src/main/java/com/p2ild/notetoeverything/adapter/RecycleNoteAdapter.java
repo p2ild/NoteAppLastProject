@@ -9,16 +9,14 @@ import android.support.v7.widget.CardView;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
 import android.widget.ImageButton;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.p2ild.notetoeverything.other.DatabaseManager;
+import com.p2ild.notetoeverything.DatabaseManager;
 import com.p2ild.notetoeverything.R;
 
 import java.io.File;
@@ -26,20 +24,19 @@ import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 
 /**
  * Created by duypi on 8/20/2016.
  */
-public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.Holder> implements View.OnTouchListener {
-    private static final String TAG = NoteAdapter.class.getSimpleName();
+public class RecycleNoteAdapter extends RecyclerView.Adapter<RecycleNoteAdapter.Holder> {
+    private static final String TAG = RecycleNoteAdapter.class.getSimpleName();
     private static final int THUMBSIZE_X = 512;
     private final Context context;
     private Cursor cursor;
     private Bitmap bitmap;
     private ArrayList<NoteItem> data;
 
-    public NoteAdapter(Context context,Cursor cursor) {
+    public RecycleNoteAdapter(Context context, Cursor cursor) {
         this.context = context;
         this.cursor = cursor;
         data = cursorToArrayList(cursor);
@@ -48,7 +45,6 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.Holder> implem
     @Override
     public Holder onCreateViewHolder(ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_view_recycler, parent, false);
-
         return new Holder(itemView);
     }
 
@@ -71,24 +67,11 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.Holder> implem
                     .into(holder.imgPreview);
         }
 
-        holder.card.setOnTouchListener(this);
     }
 
     @Override
     public int getItemCount() {
         return data.size();
-    }
-
-    @Override
-    public boolean onTouch(View view, MotionEvent motionEvent) {
-        switch (motionEvent.getAction()) {
-            case MotionEvent.ACTION_DOWN:
-
-                break;
-            default:
-                break;
-        }
-        return false;
     }
 
     //Load ảnh sử dụng BitmapFacetory--Tốc độ chậm
@@ -141,7 +124,8 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.Holder> implem
             String notePathImg = cursor.getString(cursor.getColumnIndex(DatabaseManager.NAME_COLUMN_PATH_IMAGE_NOTE));
             String notePathThumbnail = cursor.getString(cursor.getColumnIndex(DatabaseManager.NAME_COLUMN_PATH_THUMBNAIL_IMAGE_NOTE));
             String noteTypeSave = cursor.getString(cursor.getColumnIndex(DatabaseManager.NAME_COLUMN_TYPE_SAVE));
-            temp.add(new NoteItem(noteTitle,noteContent,notePathImg,notePathThumbnail,noteTypeSave));
+            String latlong = cursor.getString(cursor.getColumnIndex(DatabaseManager.NAME_COLUMN_LATLONG));
+            temp.add(new NoteItem(noteTitle,noteContent,notePathImg,notePathThumbnail,noteTypeSave,latlong));
         }
         return temp;
     }
