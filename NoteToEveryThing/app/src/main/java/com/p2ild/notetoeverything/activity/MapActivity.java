@@ -1,7 +1,6 @@
 package com.p2ild.notetoeverything.activity;
 
 import android.Manifest;
-import android.annotation.TargetApi;
 import android.app.Activity;
 import android.content.pm.PackageManager;
 import android.os.Build;
@@ -15,12 +14,12 @@ import android.widget.Toast;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.MapFragment;
 import com.google.android.gms.maps.OnMapReadyCallback;
-import com.p2ild.notetoeverything.other.DataSerializable;
 import com.p2ild.notetoeverything.R;
-import com.p2ild.notetoeverything.other.RecycleViewOnItemTouch;
 import com.p2ild.notetoeverything.adapter.NoteItem;
 import com.p2ild.notetoeverything.adapter.RecycleViewAdapterMap;
 import com.p2ild.notetoeverything.locationmanager.WifiGpsManagerActivity;
+import com.p2ild.notetoeverything.other.DataSerializable;
+import com.p2ild.notetoeverything.other.RecycleViewOnItemTouch;
 
 import java.util.ArrayList;
 
@@ -34,16 +33,19 @@ public class MapActivity extends Activity {
     private RecyclerView recyclerView;
     private MapFragment mapFragment;
 
-    @TargetApi(Build.VERSION_CODES.M)
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.act_google_map);
 
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-            requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_LOCATION);
-        } else {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                    || ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                requestPermissions(new String[]{Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION}, REQUEST_LOCATION);
+            } else {
+                createMapFrgWithSupportLocation(true);
+            }
+        }else {
             createMapFrgWithSupportLocation(true);
         }
 
@@ -83,7 +85,7 @@ public class MapActivity extends Activity {
                 if (i == PackageManager.PERMISSION_DENIED) {
                     Toast.makeText(MapActivity.this, "Nếu không đồng ý quyền , chương trình sẽ không thể định vị vị trí của bạn", Toast.LENGTH_SHORT).show();
                     createMapFrgWithSupportLocation(false);
-                }else {
+                } else {
                     createMapFrgWithSupportLocation(true);
                 }
             }
@@ -95,7 +97,7 @@ public class MapActivity extends Activity {
         mapFragment.getMapAsync(new OnMapReadyCallback() {
             @Override
             public void onMapReady(GoogleMap googleMap) {
-                wifiGpsManagerFrg = new WifiGpsManagerActivity(MapActivity.this,googleMap,arrNoteItem);
+                wifiGpsManagerFrg = new WifiGpsManagerActivity(MapActivity.this, googleMap, arrNoteItem);
                 googleMap.setMyLocationEnabled(gpsLocation);
                 recyclerView.addOnItemTouchListener(onItemTouchRcv);
             }

@@ -1,6 +1,7 @@
 package com.p2ild.notetoeverything.frgment;
 
 import android.app.AlertDialog;
+import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.SharedPreferences;
@@ -10,7 +11,6 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
 import android.util.Log;
@@ -88,7 +88,9 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
     private CheckBox cb;
     private Spinner spinner;
     private EventBus eventBus;
-    private CharSequence saveTvSpinner;
+    private String saveTvSpinner="";
+    private SharedPreferences sharedPreferences;
+    MainActivity activity;
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -100,6 +102,9 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
         eventBus = EventBus.getDefault();
         eventBus.register(this);
 
+        activity = (MainActivity) getActivity();
+        sharedPreferences= activity.getSharedPreferences(SHARE_PREFERENCE, Context.MODE_PRIVATE);
+
         this.db = ((MainActivity)getActivity()).getDb();
         this.typeSavePara = ((MainActivity)getActivity()).getTypeSave();
         if (typeSavePara.equals("")) {
@@ -107,6 +112,7 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
         } else {
             this.cursor = db.readAllData(typeSavePara);
         }
+
     }
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
@@ -239,6 +245,7 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
                     return;
                 }
                 switchButton(rawX, rawY);
+
                 switch (buttonFloatOption) {
                     case BUTTON_EDIT:
                         rlFloatOption.setVisibility(View.GONE);
@@ -316,15 +323,13 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 String type = adapterView.getItemAtPosition(i).toString();
-                MainActivity activity = (MainActivity) getActivity();
-                SharedPreferences sharedPreferences = activity.getSharedPreferences(SHARE_PREFERENCE, Context.MODE_PRIVATE);
                 switch (type) {
                     case DatabaseManager.TYPE_CAPTURE:
                         sharedPreferences.edit().putString(KEY_TYPE_SAVE, type).commit();//Khi Chụp hoặc lưu ảnh mới sẽ mở lại type cũ lên
                         cursor = activity.swapDb(type);
                         recycleNoteAdapter.swapData(cursor);
                         ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
-                        saveTvSpinner =((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).getText();
+                        saveTvSpinner =((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).getText().toString();
 
                         break;
                     case DatabaseManager.TYPE_CLIP_BOARD:
@@ -333,14 +338,14 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
                         cursor = activity.swapDb(type);
                         recycleNoteAdapter.swapData(cursor);
                         ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
-                        saveTvSpinner =((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).getText();
+                        saveTvSpinner =((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).getText().toString();
                         break;
                     case DatabaseManager.TYPE_GALLERY:
                         sharedPreferences.edit().putString(KEY_TYPE_SAVE, type).commit();
                         cursor = activity.swapDb(type);
                         recycleNoteAdapter.swapData(cursor);
                         ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
-                        saveTvSpinner =((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).getText();
+                        saveTvSpinner =((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).getText().toString();
                         break;
                     case DatabaseManager.TYPE_SCREEN_SHOT:
                         sharedPreferences.edit().putString(KEY_TYPE_SAVE, type).commit();
@@ -364,7 +369,9 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
 
             }
         });
-
+        // TODO: 9/28/2016 chưa set được text sau khi restore
+//        Log.d(TAG, "initSnipper: "+((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).getText().toString());
+//        saveTvSpinner =
     }
 
     private void startAnimRotate(final int buttonFocus) {
@@ -551,8 +558,12 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
                 break;
             case DatabaseManager.MSG_RESTORE_COMPLETE:
                 try {
+                    Log.d(TAG, "onEvent: saveTvSpinner: "+saveTvSpinner);
                     ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(saveTvSpinner);
 //                    ((TextView) findViewById(R.id.tv_title_action_bar)).setText("ALL NOTE (" + data[1] + ")");
+                    if(!sharedPreferences.getString(KEY_TYPE_SAVE,null).equals(null)){
+                        recycleNoteAdapter.swapData(activity.swapDb(sharedPreferences.getString(KEY_TYPE_SAVE,null)));
+                    }
                 } catch (java.lang.NullPointerException e) {
                     Log.d(TAG, "onEvent: Null tý thôi k sao cứ chạy tiếp đi");
                     Toast.makeText(getActivity(), "Dừng đột ngột trong quá trình restore dữ liệu", Toast.LENGTH_SHORT).show();

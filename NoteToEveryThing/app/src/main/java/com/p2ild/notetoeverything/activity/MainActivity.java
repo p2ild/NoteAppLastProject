@@ -1,7 +1,6 @@
 package com.p2ild.notetoeverything.activity;
 
 import android.Manifest;
-import android.annotation.TargetApi;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -31,8 +30,6 @@ import android.widget.ImageButton;
 import android.widget.Switch;
 import android.widget.Toast;
 
-import com.p2ild.notetoeverything.service.AppService;
-import com.p2ild.notetoeverything.other.DataSerializable;
 import com.p2ild.notetoeverything.DatabaseManager;
 import com.p2ild.notetoeverything.R;
 import com.p2ild.notetoeverything.adapter.NoteItem;
@@ -43,6 +40,8 @@ import com.p2ild.notetoeverything.frgment.FrgCapture;
 import com.p2ild.notetoeverything.frgment.FrgEdit;
 import com.p2ild.notetoeverything.locationmanager.GeoListioner;
 import com.p2ild.notetoeverything.locationmanager.WifiGpsManagerActivity;
+import com.p2ild.notetoeverything.other.DataSerializable;
+import com.p2ild.notetoeverything.service.AppService;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -78,7 +77,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Button btBackup, btRestore, btReset, btMapView;
 
     private boolean isExit;
-//Binh thuong hom nao a cung ngu muon the nay a
+    //Binh thuong hom nao a cung ngu muon the nay a
     private WifiGpsManagerActivity wifiGpsManager;
     private DatabaseManager db;
     private DrawerLayout drw;
@@ -96,7 +95,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        WifiGpsManagerActivity.getLocation(this,new GeoListioner(),new GeoListioner());
+        WifiGpsManagerActivity.getLocation(this, new GeoListioner(), new GeoListioner());
 
         checkAppPermission();
 
@@ -125,35 +124,37 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
 
-    @TargetApi(Build.VERSION_CODES.M)
     private void checkAppPermission() {
-        if (
-                ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
-                || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
-                || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
-                || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.LOCATION_HARDWARE) != PackageManager.PERMISSION_GRANTED
-                || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED
-                || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.SYSTEM_ALERT_WINDOW) != PackageManager.PERMISSION_GRANTED
-                ){
-            Log.d(TAG, "checkAppPermission: ");
-            requestPermissions(new String[]{
-                    Manifest.permission.READ_EXTERNAL_STORAGE
-                    ,Manifest.permission.WRITE_EXTERNAL_STORAGE
-                    ,Manifest.permission.CAMERA
-                    ,Manifest.permission.INTERNET
-            }, REQUEST_PERMISSION_STORE_CAMERA
-            );
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+
+            if (
+                    ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+                            || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
+                            || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
+                            || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                            || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
+                            || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.LOCATION_HARDWARE) != PackageManager.PERMISSION_GRANTED
+                            || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED
+                            || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.SYSTEM_ALERT_WINDOW) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                Log.d(TAG, "checkAppPermission: ");
+                requestPermissions(new String[]{
+                                Manifest.permission.READ_EXTERNAL_STORAGE
+                                , Manifest.permission.WRITE_EXTERNAL_STORAGE
+                                , Manifest.permission.CAMERA
+                                , Manifest.permission.INTERNET
+                        }, REQUEST_PERMISSION_STORE_CAMERA
+                );
+            }
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if(requestCode== REQUEST_PERMISSION_STORE_CAMERA){
-            if(grantResults.length>0){
-                for (int i : grantResults){
-                    if(i==PackageManager.PERMISSION_DENIED){
+        if (requestCode == REQUEST_PERMISSION_STORE_CAMERA) {
+            if (grantResults.length > 0) {
+                for (int i : grantResults) {
+                    if (i == PackageManager.PERMISSION_DENIED) {
                         Toast.makeText(MainActivity.this, "Vui lòng đồng ý hết các quyền để chương trình chạy không gặp lỗi", Toast.LENGTH_SHORT).show();
                         finish();
                     }
@@ -161,17 +162,17 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
         }
 
-        if(requestCode == REQUEST_PERMISSION_DRAW_OVER_APP){
-            if(grantResults.length>0){
-                for (int i : grantResults){
-                    if(i==PackageManager.PERMISSION_DENIED){
+        if (requestCode == REQUEST_PERMISSION_DRAW_OVER_APP) {
+            if (grantResults.length > 0) {
+                for (int i : grantResults) {
+                    if (i == PackageManager.PERMISSION_DENIED) {
                         Toast.makeText(MainActivity.this, "Nếu không cho phép quyền này chế độ screen shot và clipboard sẽ không hoạt động", Toast.LENGTH_SHORT).show();
                         new Handler().postDelayed(new Runnable() {
                             @Override
                             public void run() {
                                 finish();
                             }
-                        },2000);
+                        }, 2000);
                     }
                 }
             }
@@ -186,20 +187,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 if (b) {
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                         if (Settings.canDrawOverlays(MainActivity.this)) {
+                            editor.putString(SWITCH_SCREENSHOT, "on").commit();
                             Intent itScreenShot = new Intent(MainActivity.this, AppService.class);
                             startService(itScreenShot);
-                            editor.putString(SWITCH_SCREENSHOT, "on");
-                            editor.commit();
                         } else {
-
-                            Toast.makeText(MainActivity.this,"Click NoteToEveryThing and switch Permit drawing over other app",Toast.LENGTH_LONG).show();
+                            Toast.makeText(MainActivity.this, "Click NoteToEveryThing and switch Permit drawing over other app", Toast.LENGTH_LONG).show();
                             startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION));
                         }
+                    }else {
+                        editor.putString(SWITCH_SCREENSHOT, "on").commit();
+                        Intent itScreenShot = new Intent(MainActivity.this, AppService.class);
+                        startService(itScreenShot);
                     }
                 } else {
-                    stopService(new Intent(MainActivity.this, AppService.class));
-                    editor.putString(SWITCH_SCREENSHOT, "off");
-                    editor.commit();
+                    editor.putString(SWITCH_SCREENSHOT, "off").commit();
+                    startService(new Intent(MainActivity.this, AppService.class));
                 }
             }
         });
@@ -296,9 +298,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // TODO: 8/31/2016 ---Done--- Update data recycle view chưa sử dụng notifyDataSetChange
 //        final FragmentMain frgMain;
 
-            frgMain = new FragmentMain();
+        frgMain = new FragmentMain();
 
-        getSupportFragmentManager().beginTransaction()
+        getFragmentManager().beginTransaction()
                 .replace(R.id.activity_main, frgMain)
                 .commit();
 
@@ -337,10 +339,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     public DatabaseManager getDb() {
-        if ( db == null ) {
+        if (db == null) {
             Log.d(TAG, "getDb: DB NULL CMNR");
             db = new DatabaseManager(this, null);
-        }else {
+        } else {
             Log.d(TAG, "getDb: DB KHONG NULL");
         }
         return db;

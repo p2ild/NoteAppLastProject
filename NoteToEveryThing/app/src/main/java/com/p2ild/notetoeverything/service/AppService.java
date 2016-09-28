@@ -89,11 +89,6 @@ public class AppService extends Service implements View.OnClickListener {
     private SimpleDateFormat dateFormat;
     private Date date;
 
-
-    public AppService() {
-
-    }
-
     @Nullable
     @Override
     public IBinder onBind(Intent intent) {
@@ -141,7 +136,7 @@ public class AppService extends Service implements View.OnClickListener {
                     break;
             }
         } else {
-            Log.d(TAG, "onStartCommand: INTENT == null");
+            Log.d(TAG, "onStartCommand: INTENT == null || KHÔNG CLICK BACKUP/RESTORE/DELETE");
         }
     }
 

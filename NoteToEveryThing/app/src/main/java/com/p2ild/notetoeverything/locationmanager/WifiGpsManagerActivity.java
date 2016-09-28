@@ -181,6 +181,7 @@ public class WifiGpsManagerActivity extends MapFragment {
     }
 
     private void initAllMarker() {
+        Log.d(TAG, "initAllMarker: arrNote size: "+arrNote.size());
         for (int i = 0; i < arrNote.size(); i++) {
             try {
                 double lat = Double.parseDouble(arrNote.get(i).getLatlong().split(",")[0]);
