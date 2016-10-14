@@ -16,20 +16,27 @@
         android:background="@android:color/transparent"
         android:src="@drawable/ic_menu" />
 
-    <Spinner
-        android:background="@color/color_action_bar"
-        android:id="@+id/sp_title_action_bar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_toRightOf="@id/ib_menu"
-        android:layout_toLeftOf="@+id/cb_checked"
-        android:gravity="center" />
-    <CheckBox
-        android:id="@+id/cb_checked"
+    <TextView
+        android:id="@+id/tv_count_note"
+        android:background="@drawable/shape_circle_count_note"
+        android:textAlignment="center"
+        android:gravity="center"
+        android:textColor="@color/color_primary_text"
         android:layout_centerVertical="true"
-        android:button="@drawable/custom_drawable_checkbox"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_alignParentRight="true"
         />
+
+    <Spinner
+        android:background="@color/color_action_bar"
+        android:id="@+id/sp_title_action_bar"
+        android:layout_width="match_parent"
+        android:layout_marginLeft="20dp"
+        android:layout_marginRight="20dp"
+        android:layout_height="wrap_content"
+        android:layout_toRightOf="@id/ib_menu"
+        android:layout_toLeftOf="@id/tv_count_note"
+        android:gravity="center" />
+
 </RelativeLayout>

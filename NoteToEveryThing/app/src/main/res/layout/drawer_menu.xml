@@ -17,14 +17,16 @@
             android:layout_centerInParent="true"
             android:background="@drawable/circle"
             android:gravity="center"
-            android:text="P2ild"
+            android:text="dev.p2ild"
             android:textSize="20sp"
             android:textStyle="bold" />
     </RelativeLayout>
 
     <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="match_parent"
+        android:background="@drawable/placeholder_greensea"
+        >
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -37,6 +39,7 @@
                 android:padding="10dp"
                 android:text="ScreenShot Mode"
                 android:textColor="@color/text_light"
+                android:background="@color/color_tranparent"
                 android:textSize="20sp" />
 
             <Switch
@@ -46,6 +49,19 @@
                 android:gravity="start|center"
                 android:padding="10dp"
                 android:text="Clipboard Mode"
+                android:background="@color/color_tranparent"
+                android:textColor="@color/text_light"
+                android:textSize="20sp" />
+
+            <Button
+                android:id="@+id/bt_map_view"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/color_tranparent"
+                android:gravity="start|center"
+                android:padding="10dp"
+                android:text="MapView"
+                android:textAlignment="center"
                 android:textColor="@color/text_light"
                 android:textSize="20sp" />
 
@@ -84,17 +100,7 @@
                 android:textAlignment="center"
                 android:textColor="@color/text_light"
                 android:textSize="20sp"/>
-            <Button
-                android:id="@+id/bt_map_view"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@color/color_tranparent"
-                android:gravity="start|center"
-                android:padding="10dp"
-                android:text="MapView"
-                android:textAlignment="center"
-                android:textColor="@color/text_light"
-                android:textSize="20sp" />
+
         </LinearLayout>
     </ScrollView>
 

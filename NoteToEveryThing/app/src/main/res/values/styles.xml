@@ -2,9 +2,10 @@
 
     <!-- Base application theme. -->
     <style name="AppThem" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="colorPrimaryDark">@color/colorPrimaryDark</item>
-        <item name="colorPrimary">@color/colorPrimary</item>
-        <item name="android:windowFullscreen">true</item>
+        <item name="colorPrimaryDark">@color/color_action_bar</item>
+        <item name="colorPrimary">@color/color_task</item>
+        <item name="android:windowNoTitle">true</item>
     </style>
 
+    <color name="color_task">#4A148C</color>
 </resources>

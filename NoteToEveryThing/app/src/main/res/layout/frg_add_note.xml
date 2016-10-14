@@ -5,34 +5,62 @@
     android:background="@color/bg_frg_add_note"
     android:orientation="vertical">
 
-    <EditText
-        android:id="@+id/ed_note_title"
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/edit_text"
-        android:drawableLeft="@drawable/ic_left_arrow_angle"
-        android:drawableRight="@drawable/ic_camera_lens_32dp"
-        android:gravity="center"
-        android:hint="Note title"
-        android:padding="10dp"
-        android:textColor="@color/color_primary_text"
-        android:textColorHint="@color/color_secondary_text"
-        android:textSize="25sp"
-        android:textStyle="bold" />
+        android:layout_height="match_parent">
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+            <EditText
+                android:id="@+id/ed_note_title"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/edit_text"
+                android:drawableLeft="@drawable/ic_left_arrow_angle"
+                android:drawableRight="@drawable/ic_camera_lens_32dp"
+                android:gravity="center"
+                android:hint="Note title"
+                android:padding="10dp"
+                android:textColor="@color/color_primary_text"
+                android:textColorHint="@color/color_secondary_text"
+                android:textSize="25sp"
+                android:textStyle="bold" />
 
-    <EditText
-        android:id="@+id/ed_note_content"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:background="@drawable/edit_text"
-        android:hint="Note content"
-        android:padding="10dp"
-        android:textColor="@color/color_primary_text"
-        android:textColorHint="@color/color_secondary_text" />
-    <ImageView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:id="@+id/iv_img_frg_add_note"
-        />
+            <EditText
+                android:id="@+id/ed_note_content"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@drawable/edit_text"
+                android:hint="Note content"
+                android:padding="10dp"
+                android:textColor="@color/color_primary_text"
+                android:textColorHint="@color/color_secondary_text" />
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:id="@+id/iv_img_frg_add_note"
+                />
+
+            <TextView
+                android:id="@+id/tv_status_location"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_gravity="center"
+                android:layout_marginTop="20dp"
+                android:textAlignment="center"
+                android:text="Nếu có 3G hoặc Wifi việc tìm vị trí của bạn sẽ nhanh hơn \nPlease wait to find your location .."
+                />
+            <ProgressBar
+                android:id="@+id/prg_gps"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:indeterminate="true"
+                android:visibility="invisible"
+                />
+
+        </LinearLayout>
+    </ScrollView>
+
 
 </LinearLayout>

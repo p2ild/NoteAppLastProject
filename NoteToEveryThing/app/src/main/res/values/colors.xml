@@ -12,4 +12,6 @@
     <color name="color_tranparent">#00000000</color>
     <color name="bg_edit_text">#FFFFFF</color>
     <color name="bg_frg_add_note">#ecf0f1</color>
+    <color name="color_transparent_90">#90000000</color>
+    <color name="color_transparent_50">#50000000</color>
 </resources>

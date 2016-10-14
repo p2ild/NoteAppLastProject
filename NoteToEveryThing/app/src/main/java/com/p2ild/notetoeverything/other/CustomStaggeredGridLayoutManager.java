@@ -18,8 +18,6 @@ public class CustomStaggeredGridLayoutManager extends StaggeredGridLayoutManager
         super(spanCount, orientation);
     }
 
-
-
     @Override
     public boolean canScrollVertically() {
         return canScroll;

@@ -7,6 +7,7 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
 
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION" />
@@ -25,7 +26,7 @@
 
     <application
         android:allowBackup="true"
-        android:icon="@drawable/ic_app_note"
+        android:icon="@drawable/ic_app_note_512"
         android:label="@string/app_name"
         android:supportsRtl="true"
         android:resizeableActivity="true"
@@ -41,6 +42,12 @@
         <activity android:name=".activity.NoteContentActivity" />
 
         <service android:name=".service.AppService" />
+
+        <receiver android:name=".service.AppService$WifiBroadcast">
+            <intent-filter>
+                <action android:name="android.net.conn.CONNECTIVITY_CHANGE" />
+            </intent-filter>
+        </receiver>
 
         <meta-data
             android:name="com.google.android.maps.v2.API_KEY"

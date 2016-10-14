@@ -27,7 +27,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:layout_toLeftOf="@+id/ib_add_note"
+            android:layout_toLeftOf="@+id/ib_save_activity_content"
             android:layout_toRightOf="@id/ib_back"
             android:text="TitleNote"
             android:textAlignment="center"
@@ -36,21 +36,21 @@
             android:textStyle="bold" />
 
         <ImageButton
-            android:id="@+id/ib_add_note"
+            android:id="@+id/ib_save_activity_content"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginRight="10dp"
-            android:layout_toLeftOf="@+id/ib_options"
+            android:layout_toLeftOf="@+id/ib_show_on_map"
             android:background="@android:color/transparent"
-            android:src="@drawable/ic_add_note" />
+            android:src="@drawable/ic_save_32px" />
 
         <ImageButton
-            android:id="@+id/ib_options"
+            android:id="@+id/ib_show_on_map"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:background="@android:color/transparent"
-            android:src="@drawable/ic_option_dot" />
+            android:src="@drawable/ic_map_32" />
 
 
     </RelativeLayout>

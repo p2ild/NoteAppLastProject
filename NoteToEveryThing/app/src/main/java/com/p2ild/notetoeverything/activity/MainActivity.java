@@ -30,7 +30,8 @@ import android.widget.ImageButton;
 import android.widget.Switch;
 import android.widget.Toast;
 
-import com.p2ild.notetoeverything.DatabaseManager;
+import com.p2ild.notetoeverything.DatabaseManagerCopyDb;
+import com.p2ild.notetoeverything.MessageEventBus;
 import com.p2ild.notetoeverything.R;
 import com.p2ild.notetoeverything.adapter.NoteItem;
 import com.p2ild.notetoeverything.adapter.RecycleNoteAdapter;
@@ -38,10 +39,12 @@ import com.p2ild.notetoeverything.frgment.FragmentMain;
 import com.p2ild.notetoeverything.frgment.FrgAddNote;
 import com.p2ild.notetoeverything.frgment.FrgCapture;
 import com.p2ild.notetoeverything.frgment.FrgEdit;
-import com.p2ild.notetoeverything.locationmanager.GeoListioner;
-import com.p2ild.notetoeverything.locationmanager.WifiGpsManagerActivity;
+import com.p2ild.notetoeverything.locationmanager.WifiGpsManager;
 import com.p2ild.notetoeverything.other.DataSerializable;
 import com.p2ild.notetoeverything.service.AppService;
+
+import org.greenrobot.eventbus.EventBus;
+import org.greenrobot.eventbus.Subscribe;
 
 import java.io.File;
 import java.io.FileNotFoundException;
@@ -70,7 +73,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final String KEY_SERVICE = "KEY_SERVICE";
     private static final String KEY_TYPE_SAVE = "KEY_TYPE_SAVE";
     private static final int REQUEST_PERMISSION_DRAW_OVER_APP = 888;
-    private static final int REQUEST_PERMISSION_STORE_CAMERA = 111;
+    private static final int REQUEST_PERMISSION = 111;
 
     private ImageButton btAddNote;
 
@@ -78,130 +81,150 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     private boolean isExit;
     //Binh thuong hom nao a cung ngu muon the nay a
-    private WifiGpsManagerActivity wifiGpsManager;
-    private DatabaseManager db;
+    private WifiGpsManager wifiGpsManager;
+    // TODO: 2016-10-05 Chuyển cách import database
+    private DatabaseManagerCopyDb db;
     private DrawerLayout drw;
-    private Switch screenShots;
-    private Switch clipBoard;
+    private Switch swScreenShots;
+    private Switch swClipBoard;
     private SimpleDateFormat dateFormat;
     private Date date;
 
     private DrawerLayout.DrawerListener myDrawerListener;
     private SharedPreferences sharedPreferences;
     private FragmentMain frgMain;
+    private EventBus eventBus;
+    private boolean canBackup, canRestore, canDelete;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        Log.d(TAG, "onCreate: ");
         setContentView(R.layout.activity_main);
-
-        WifiGpsManagerActivity.getLocation(this, new GeoListioner(), new GeoListioner());
-
+        initDefaultValue();
         checkAppPermission();
+    }
+
+    private void initDefaultValue() {
+        canDelete = true;
+        canBackup = true;
+        canRestore = true;
 
         dateFormat = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
         date = new Date();
-        //Khởi tạo cơ sở dữ liệu load ảnh thêm sửa xóa
-        db = new DatabaseManager(this, null);
+
+        eventBus = EventBus.getDefault();
+        eventBus.register(this);
+
+        db = new DatabaseManagerCopyDb(this);
 
         sharedPreferences = getSharedPreferences(SHARE_PREFERENCE, MODE_PRIVATE);
-        showFrgMain();
 
+        if (sharedPreferences.getString(SWITCH_SCREENSHOT, null) == null) {
+            sharedPreferences.edit().putString(SWITCH_SCREENSHOT, "off").apply();
+        }
+        if (sharedPreferences.getString(SWITCH_CLIPBOARD, null) == null) {
+            sharedPreferences.edit().putString(SWITCH_CLIPBOARD, "off").apply();
+        }
+    }
+
+    public void initView() {
         drw = (DrawerLayout) findViewById(R.id.drawer_layout);
-        drw.addDrawerListener(myDrawerListener);
-
         (btBackup = (Button) findViewById(R.id.bt_backup)).setOnClickListener(this);
         (btRestore = (Button) findViewById(R.id.bt_restore)).setOnClickListener(this);
         (btReset = (Button) findViewById(R.id.bt_reset_note)).setOnClickListener(this);
         (btMapView = (Button) findViewById(R.id.bt_map_view)).setOnClickListener(this);
+        swScreenShots = (Switch) findViewById(R.id.sw_scr_shot);
+        swClipBoard = (Switch) findViewById(R.id.sw_clip_board);
+        showFrgMain();
+    }
 
-        initScreenShot(sharedPreferences);
-        initClipBoard(sharedPreferences);
+    private void initAll() {
+        //Khởi tạo cơ sở dữ liệu load ảnh thêm sửa xóa
+        Log.d(TAG, "initAll: ");
+        initView();
+        drw.addDrawerListener(myDrawerListener);
+        initScreenShot();
+        initClipBoard();
         //Khởi tạo view
-
         isExit = false;
         initOpenCV();
+
     }
 
 
     private void checkAppPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-
-            if (
-                    ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
-                            || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED
-                            || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.CAMERA) != PackageManager.PERMISSION_GRANTED
-                            || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                            || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED
-                            || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.LOCATION_HARDWARE) != PackageManager.PERMISSION_GRANTED
-                            || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED
-                            || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.SYSTEM_ALERT_WINDOW) != PackageManager.PERMISSION_GRANTED
-                    ) {
-                Log.d(TAG, "checkAppPermission: ");
+            if (ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission_group.STORAGE) != PackageManager.PERMISSION_GRANTED
+                    || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission_group.CAMERA) != PackageManager.PERMISSION_GRANTED
+                    || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission_group.LOCATION) != PackageManager.PERMISSION_GRANTED
+                    || ContextCompat.checkSelfPermission(MainActivity.this, Manifest.permission.INTERNET) != PackageManager.PERMISSION_GRANTED) {
                 requestPermissions(new String[]{
                                 Manifest.permission.READ_EXTERNAL_STORAGE
                                 , Manifest.permission.WRITE_EXTERNAL_STORAGE
                                 , Manifest.permission.CAMERA
+                                , Manifest.permission.ACCESS_COARSE_LOCATION
+                                , Manifest.permission.ACCESS_FINE_LOCATION
                                 , Manifest.permission.INTERNET
-                        }, REQUEST_PERMISSION_STORE_CAMERA
+                        }, REQUEST_PERMISSION
                 );
             }
+        } else {
+            initAll();
         }
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, String[] permissions, int[] grantResults) {
-        if (requestCode == REQUEST_PERMISSION_STORE_CAMERA) {
-            if (grantResults.length > 0) {
-                for (int i : grantResults) {
-                    if (i == PackageManager.PERMISSION_DENIED) {
-                        Toast.makeText(MainActivity.this, "Vui lòng đồng ý hết các quyền để chương trình chạy không gặp lỗi", Toast.LENGTH_SHORT).show();
-                        finish();
-                    }
+        if (requestCode == REQUEST_PERMISSION && grantResults.length > 0) {
+            for (int i : grantResults) {
+                if (i == PackageManager.PERMISSION_DENIED) {
+                    Toast.makeText(MainActivity.this, "Vui lòng đồng ý hết các quyền để chương trình chạy không gặp lỗi", Toast.LENGTH_SHORT).show();
+                    finish();
                 }
             }
+            initAll();
         }
 
-        if (requestCode == REQUEST_PERMISSION_DRAW_OVER_APP) {
-            if (grantResults.length > 0) {
-                for (int i : grantResults) {
-                    if (i == PackageManager.PERMISSION_DENIED) {
-                        Toast.makeText(MainActivity.this, "Nếu không cho phép quyền này chế độ screen shot và clipboard sẽ không hoạt động", Toast.LENGTH_SHORT).show();
-                        new Handler().postDelayed(new Runnable() {
-                            @Override
-                            public void run() {
-                                finish();
-                            }
-                        }, 2000);
-                    }
+        if (requestCode == REQUEST_PERMISSION_DRAW_OVER_APP && grantResults.length > 0) {
+            for (int i : grantResults) {
+                if (i == PackageManager.PERMISSION_DENIED) {
+                    Toast.makeText(MainActivity.this, "Nếu không cho phép quyền này chế độ screen shot và clipboard sẽ không hoạt động", Toast.LENGTH_SHORT).show();
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            finish();
+                        }
+                    }, 2000);
                 }
             }
         }
     }
 
-    private void initScreenShot(final SharedPreferences sharedPreferences) {
-        (screenShots = (Switch) findViewById(R.id.sw_scr_shot)).setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+    private void initScreenShot() {
+        (swScreenShots).setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                SharedPreferences.Editor editor = sharedPreferences.edit();
                 if (b) {
+                    sharedPreferences.edit().putString(SWITCH_SCREENSHOT, "on").apply();
                     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
                         if (Settings.canDrawOverlays(MainActivity.this)) {
-                            editor.putString(SWITCH_SCREENSHOT, "on").commit();
                             Intent itScreenShot = new Intent(MainActivity.this, AppService.class);
                             startService(itScreenShot);
                         } else {
-                            Toast.makeText(MainActivity.this, "Click NoteToEveryThing and switch Permit drawing over other app", Toast.LENGTH_LONG).show();
+                            Toast.makeText(MainActivity.this, "Find app NoteEveryThing on this list\n" +
+                                    "And switch Permit drawing over other app to on", Toast.LENGTH_LONG).show();
                             startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION));
                         }
-                    }else {
-                        editor.putString(SWITCH_SCREENSHOT, "on").commit();
+                    } else {
+                        sharedPreferences.edit().putString(SWITCH_SCREENSHOT, "on").apply();
                         Intent itScreenShot = new Intent(MainActivity.this, AppService.class);
                         startService(itScreenShot);
                     }
                 } else {
-                    editor.putString(SWITCH_SCREENSHOT, "off").commit();
-                    startService(new Intent(MainActivity.this, AppService.class));
+                    sharedPreferences.edit().putString(SWITCH_SCREENSHOT, "off").apply();
+                    Intent itScreenShot = new Intent(MainActivity.this, AppService.class);
+                    startService(itScreenShot);
                 }
             }
         });
@@ -209,10 +232,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (sharedPreferences.getString(SWITCH_SCREENSHOT, null) != null) {
             switch (sharedPreferences.getString(SWITCH_SCREENSHOT, null)) {
                 case "on":
-                    screenShots.setChecked(true);
+                    swScreenShots.setChecked(true);
                     break;
                 case "off":
-                    screenShots.setChecked(false);
+                    swScreenShots.setChecked(false);
                     break;
                 default:
                     break;
@@ -220,22 +243,30 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    private void initClipBoard(final SharedPreferences sharedPreferences) {
-        (clipBoard = (Switch) findViewById(R.id.sw_clip_board)).setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
+    private void initClipBoard() {
+        (swClipBoard).setOnCheckedChangeListener(new CompoundButton.OnCheckedChangeListener() {
             @Override
             public void onCheckedChanged(CompoundButton compoundButton, boolean b) {
-                SharedPreferences.Editor editor = sharedPreferences.edit();
                 if (b) {
-
-                    editor.putString(SWITCH_CLIPBOARD, "on");
-                    editor.commit();
+                    sharedPreferences.edit().putString(SWITCH_CLIPBOARD, "on").apply();
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                        if (Settings.canDrawOverlays(MainActivity.this)) {
+                            Intent itClipboard = new Intent(MainActivity.this, AppService.class);
+                            startService(itClipboard);
+                        } else {
+                            Toast.makeText(MainActivity.this, "Find app NoteEveryThing on this list\n" +
+                                    "And switch Permit drawing over other app to on", Toast.LENGTH_LONG).show();
+                            startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION));
+                        }
+                    } else {
+                        sharedPreferences.edit().putString(SWITCH_CLIPBOARD, "on").apply();
+                        Intent itClipboard = new Intent(MainActivity.this, AppService.class);
+                        startService(itClipboard);
+                    }
+                } else {
+                    sharedPreferences.edit().putString(SWITCH_CLIPBOARD, "off").apply();
                     Intent itClipboard = new Intent(MainActivity.this, AppService.class);
                     startService(itClipboard);
-                } else {
-                    Log.d(TAG, "onCheckedChanged: OFF");
-                    editor.putString(SWITCH_CLIPBOARD, "off");
-                    editor.commit();
-                    stopService(new Intent(MainActivity.this, AppService.class));
                 }
             }
         });
@@ -243,10 +274,10 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (sharedPreferences.getString(SWITCH_CLIPBOARD, null) != null) {
             switch (sharedPreferences.getString(SWITCH_CLIPBOARD, null)) {
                 case "on":
-                    clipBoard.setChecked(true);
+                    swClipBoard.setChecked(true);
                     break;
                 case "off":
-                    clipBoard.setChecked(false);
+                    swClipBoard.setChecked(false);
                     break;
                 default:
                     break;
@@ -254,15 +285,73 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    @Override
-    protected void onResume() {
-        super.onResume();
+    public boolean showArrayWifiDetect() {
+        if (getIntent().getSerializableExtra(AppService.WIFI_DETECT + "") != null) {
+            ArrayList arrayList = (ArrayList) ((DataSerializable) getIntent().getSerializableExtra(AppService.WIFI_DETECT + "")).getData();
+            frgMain.getRecycleNoteAdapter().swapDataUseArray(arrayList);
+            Log.d(TAG, "showArrayWifiDetect: Chạy đến cuối");
+            return true;
+        } else {
+            return false;
+        }
     }
 
-    private void putDataSharePreference(String key, String value) {
-        SharedPreferences.Editor editor = sharedPreferences.edit();
-        editor.putString(key, value);
-        editor.commit();
+    @Override
+    protected void onResume() {
+        initView();
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            if (Settings.canDrawOverlays(this)) {
+                if (sharedPreferences.getString(SWITCH_SCREENSHOT, null) != null) {
+                    if (sharedPreferences.getString(SWITCH_SCREENSHOT, null).equals("on")) {
+                        swScreenShots.setChecked(true);
+                        Intent itScreenShot = new Intent(MainActivity.this, AppService.class);
+                        startService(itScreenShot);
+                    } else {
+                        swScreenShots.setChecked(false);
+                        Intent itScreenShot = new Intent(MainActivity.this, AppService.class);
+                        startService(itScreenShot);
+                    }
+                }
+
+                if (sharedPreferences.getString(SWITCH_CLIPBOARD, null) != null) {
+                    if (sharedPreferences.getString(SWITCH_CLIPBOARD, null).equals("on")) {
+                        swClipBoard.setChecked(true);
+                        Intent itClipboard = new Intent(MainActivity.this, AppService.class);
+                        startService(itClipboard);
+                    } else {
+                        swClipBoard.setChecked(false);
+                        Intent itClipboard = new Intent(MainActivity.this, AppService.class);
+                        startService(itClipboard);
+                    }
+                }
+            }
+        } else {
+            if (sharedPreferences.getString(SWITCH_SCREENSHOT, null) != null) {
+                if (sharedPreferences.getString(SWITCH_SCREENSHOT, null).equals("on")) {
+                    swScreenShots.setChecked(true);
+                    Intent itScreenShot = new Intent(MainActivity.this, AppService.class);
+                    startService(itScreenShot);
+                } else {
+                    swScreenShots.setChecked(false);
+                    Intent itScreenShot = new Intent(MainActivity.this, AppService.class);
+                    startService(itScreenShot);
+                }
+            }
+
+            if (sharedPreferences.getString(SWITCH_CLIPBOARD, null) != null) {
+                if (sharedPreferences.getString(SWITCH_CLIPBOARD, null).equals("on")) {
+                    swClipBoard.setChecked(true);
+                    Intent itClipboard = new Intent(MainActivity.this, AppService.class);
+                    startService(itClipboard);
+                } else {
+                    swClipBoard.setChecked(false);
+                    Intent itClipboard = new Intent(MainActivity.this, AppService.class);
+                    startService(itClipboard);
+                }
+            }
+        }
+        super.onResume();
     }
 
     private void resetAllDataBase() {
@@ -293,12 +382,13 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // TODO: 8/25/2016 Khởi tạo OpenCv xử lý ảnh
     }
 
+
     private void showFrgMain() {
 //        removeAllFragment();
         // TODO: 8/31/2016 ---Done--- Update data recycle view chưa sử dụng notifyDataSetChange
-//        final FragmentMain frgMain;
-
-        frgMain = new FragmentMain();
+        if (frgMain == null) {
+            frgMain = new FragmentMain();
+        }
 
         getFragmentManager().beginTransaction()
                 .replace(R.id.activity_main, frgMain)
@@ -338,13 +428,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         }
     }
 
-    public DatabaseManager getDb() {
-        if (db == null) {
-            Log.d(TAG, "getDb: DB NULL CMNR");
-            db = new DatabaseManager(this, null);
-        } else {
-            Log.d(TAG, "getDb: DB KHONG NULL");
-        }
+    public DatabaseManagerCopyDb getDb() {
         return db;
     }
 
@@ -377,8 +461,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 .commit();
     }
 
-    public void insertToDataBase(String noteTitle, String noteContent, final String imgPath, final String imgThumbnailPath, final String typeSave) {
-        db.insert(noteTitle, noteContent, imgPath, imgThumbnailPath, typeSave, null);
+    public void insertToDataBase(String noteTitle, String noteContent, final String imgPath, final String imgThumbnailPath, final String typeSave, String latlong) {
+        db.insert(noteTitle, noteContent, imgPath, imgThumbnailPath, typeSave, latlong, "", "", true);
         showFrgMain();
     }
 
@@ -387,8 +471,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         showFrgMain();
     }
 
-    public void deleteDb(String noteTitleDelete, String noteContentDelete, String noteImg, String noteThumbnail, String typeSave) {
-        db.deleteNote(noteTitleDelete, noteContentDelete, noteImg, noteThumbnail, typeSave);
+    public void deleteDb(String noteTitleDelete, String noteContentDelete, String noteImg, String noteThumbnail, String typeSave, String latlong, String alarm, String wifiName) {
+        db.deleteNote(noteTitleDelete, noteContentDelete, noteImg, noteThumbnail, typeSave, latlong, alarm, wifiName);
         showFrgMain();
     }
 
@@ -418,32 +502,49 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     public void onClick(View view) {
+        Log.d(TAG, "onClick: ");
         switch (view.getId()) {
             case R.id.bt_backup:
-                Intent itBackup = new Intent(this, AppService.class);
-                itBackup.putExtra(KEY_SERVICE, SERVICE_BACKUP);
-                startService(itBackup);
-                drw.closeDrawer(Gravity.LEFT);
-                String type = sharedPreferences.getString(FragmentMain.KEY_TYPE_SAVE, null);
-                if (type != null) {
-                    frgMain.recycleNoteAdapter.swapData(swapDb(type));
+                if (canBackup) {
+                    canBackup = false;
+                    Intent itBackup = new Intent(this, AppService.class);
+                    itBackup.putExtra(KEY_SERVICE, SERVICE_BACKUP);
+
+                    startService(itBackup);
+                    drw.closeDrawer(Gravity.LEFT);
+                    String type = sharedPreferences.getString(FragmentMain.KEY_TYPE_SAVE, null);
+                    if (type != null) {
+                        frgMain.getRecycleNoteAdapter().swapDataUseCursor(swapDb(type));
+                    }
+                } else {
+                    Toast.makeText(MainActivity.this, "Backup is running", Toast.LENGTH_SHORT).show();
                 }
                 break;
             case R.id.bt_restore:
-                //chay may ao 7.0 thu no chet khong
+                if (canRestore) {
+                    canRestore = false;
+                    //chay may ao 7.0 thu no chet khong
 //                E lai chua cai thang 7.0 r @@
-                Intent itRestore = new Intent(this, AppService.class);
-                itRestore.putExtra(KEY_SERVICE, SERVICE_RESTORE);
-                startService(itRestore);
-                String type1 = sharedPreferences.getString(FragmentMain.KEY_TYPE_SAVE, null);
-                if (type1 != null) {
-                    frgMain.recycleNoteAdapter.swapData(swapDb(type1));
+                    Intent itRestore = new Intent(this, AppService.class);
+                    itRestore.putExtra(KEY_SERVICE, SERVICE_RESTORE);
+                    startService(itRestore);
+                    String type1 = sharedPreferences.getString(FragmentMain.KEY_TYPE_SAVE, null);
+                    if (type1 != null) {
+                        frgMain.getRecycleNoteAdapter().swapDataUseCursor(swapDb(type1));
+                    }
+                    drw.closeDrawer(Gravity.LEFT);
+                } else {
+                    Toast.makeText(MainActivity.this, "Restore is running", Toast.LENGTH_SHORT).show();
                 }
-                drw.closeDrawer(Gravity.LEFT);
                 break;
             case R.id.bt_reset_note:
-                resetAllDataBase();
-                drw.closeDrawer(Gravity.LEFT);
+                if (canDelete) {
+                    canDelete = false;
+                    resetAllDataBase();
+                    drw.closeDrawer(Gravity.LEFT);
+                } else {
+                    Toast.makeText(MainActivity.this, "Delete is running", Toast.LENGTH_SHORT).show();
+                }
                 break;
             case R.id.bt_map_view:
                 Intent intent = new Intent(MainActivity.this, MapActivity.class);
@@ -466,6 +567,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         startActivityForResult(intent, REQUEST_PICK_IMAGE);
     }
 
+
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // TODO: 9/19/2016 Pick 2 ảnh thành 1 ảnh
@@ -483,14 +585,14 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             try {
                 InputStream inputStreamImg = getContentResolver().openInputStream(data.getData());
 
-                final File fileOutputImg = new File(DatabaseManager.PATH_APP_INTERNAL + "/imageSave/" + fileNameImage);
-                final File fileOutputThumbnail = new File(DatabaseManager.PATH_APP_INTERNAL + "/imageSave/" + fileNameImageThumbnail);
-                FileObserver fileObserver = new FileObserver(DatabaseManager.PATH_APP_INTERNAL + "/imageSave") {
+                final File fileOutputImg = new File(DatabaseManagerCopyDb.PATH_APP_INTERNAL + "/imageSave/" + fileNameImage);
+                final File fileOutputThumbnail = new File(DatabaseManagerCopyDb.PATH_APP_INTERNAL + "/imageSave/" + fileNameImageThumbnail);
+                FileObserver fileObserver = new FileObserver(DatabaseManagerCopyDb.PATH_APP_INTERNAL + "/imageSave") {
                     @Override
                     public void onEvent(int event, String path) {
                         Log.d(TAG, "onEvent: " + path);
                         if (event == FileObserver.CLOSE_WRITE && path.equals(fileOutputImg.getName())) {
-                            showFrgAddNote(fileOutputImg.getPath(), fileOutputThumbnail.getPath(), DatabaseManager.TYPE_GALLERY);
+                            showFrgAddNote(fileOutputImg.getPath(), fileOutputThumbnail.getPath(), DatabaseManagerCopyDb.TYPE_GALLERY);
                             this.stopWatching();
                         }
                     }
@@ -529,7 +631,38 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 //        if(integer!=null && integer==)
 //    }
 
+    @Override
+    protected void onPause() {
+        eventBus.unregister(this);
+        super.onPause();
+    }
+
     public Cursor swapDb(String typeSelect) {
         return db.readAllData(typeSelect);
+    }
+
+    @Subscribe(sticky = true)
+    public void onEvent(MessageEventBus bus) {
+        Log.d(TAG, "onEvent: onEvent Bus");
+        try {
+            switch (bus.getType()) {
+                case AppService.SERVICE_BACKUP:
+                    frgMain.getRecycleNoteAdapter().swapDataUseCursor(swapDb("All"));
+                    canBackup = true;
+                    break;
+                case AppService.SERVICE_DELETE:
+                    frgMain.getRecycleNoteAdapter().swapDataUseCursor(swapDb("All"));
+                    canDelete = true;
+                    break;
+                case AppService.SERVICE_RESTORE:
+                    canRestore = true;
+                    frgMain.getRecycleNoteAdapter().swapDataUseCursor(swapDb("All"));
+                    break;
+                default:
+                    break;
+            }
+        } catch (NullPointerException e) {
+        }
+
     }
 }

@@ -14,10 +14,11 @@ import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
 
+import com.p2ild.notetoeverything.DatabaseManagerCopyDb;
 import com.p2ild.notetoeverything.R;
 import com.p2ild.notetoeverything.other.SurfaceView;
 import com.p2ild.notetoeverything.activity.MainActivity;
-import com.p2ild.notetoeverything.DatabaseManager;
+import com.p2ild.notetoeverything.DatabaseManagerCopyDb;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -53,7 +54,7 @@ public class FrgCapture extends Fragment implements View.OnClickListener {
     @Override
     public void onViewCreated(View view, Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        File file = new File(DatabaseManager.PATH_APP_INTERNAL + "/imageSave");
+        File file = new File(DatabaseManagerCopyDb.PATH_APP_INTERNAL + "/imageSave");
         if (!file.exists()) {
             file.mkdirs();
         }
@@ -65,16 +66,16 @@ public class FrgCapture extends Fragment implements View.OnClickListener {
                 try {
                     String fileNameImage = "note" + dateFormat.format(date) + ".jpg";
                     final String fileNameImageThumbnail = "note" + dateFormat.format(date) + "_thumbnail.jpg";
-                    final File fileOpImg = new File(DatabaseManager.PATH_APP_INTERNAL + "/imageSave/" + fileNameImage);
-                    final File fileOpThumbnail = new File(DatabaseManager.PATH_APP_INTERNAL + "/imageSave/" + fileNameImageThumbnail);
+                    final File fileOpImg = new File(DatabaseManagerCopyDb.PATH_APP_INTERNAL + "/imageSave/" + fileNameImage);
+                    final File fileOpThumbnail = new File(DatabaseManagerCopyDb.PATH_APP_INTERNAL + "/imageSave/" + fileNameImageThumbnail);
                     FileOutputStream opImg = new FileOutputStream(fileOpImg);
                     FileOutputStream opThumbnail = new FileOutputStream(fileOpThumbnail);
-                    FileObserver fileObserver = new FileObserver(DatabaseManager.PATH_APP_INTERNAL + "/imageSave") {
+                    FileObserver fileObserver = new FileObserver(DatabaseManagerCopyDb.PATH_APP_INTERNAL + "/imageSave") {
                         @Override
                         public void onEvent(int event, String path) {
                             Log.d(TAG, "onEvent: "+path);
                             if (event == FileObserver.CLOSE_WRITE && path.equals(fileNameImageThumbnail)) {
-                                ((MainActivity) getActivity()).showFrgAddNote(fileOpImg.getPath(), fileOpThumbnail.getPath(),DatabaseManager.TYPE_CAPTURE);
+                                ((MainActivity) getActivity()).showFrgAddNote(fileOpImg.getPath(), fileOpThumbnail.getPath(), DatabaseManagerCopyDb.TYPE_CAPTURE);
                                 this.stopWatching();
                             }
                         }

@@ -10,10 +10,9 @@
         android:layout_height="match_parent"
         android:layout_width="match_parent"
         layout="@layout/drawer_content" />
-
     <include
-        android:layout_gravity="left"
-        android:layout_height="match_parent"
+    android:layout_gravity="left"
+    android:layout_height="match_parent"
         android:layout_width="match_parent"
         layout="@layout/drawer_menu" />
 </android.support.v4.widget.DrawerLayout>

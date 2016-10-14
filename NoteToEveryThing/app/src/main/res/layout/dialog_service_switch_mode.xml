@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="wrap_content"
+    android:layout_height="90dp"
+    android:orientation="horizontal">
+
+    <TableRow
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content">
+        <ImageButton
+            android:id="@+id/ib_show_expand"
+            android:layout_width="match_parent"
+            android:layout_height="90dp"
+            android:gravity="center"
+            android:padding="2dp"
+            android:background="@color/bg_transparent"
+            android:textColor="@color/text_light"
+            android:textSize="15sp" />
+        <LinearLayout
+            android:id="@+id/ll_service_switch"
+            android:layout_width="wrap_content"
+            android:layout_height="match_parent"
+            android:background="@drawable/shape_conner_switch"
+            android:orientation="vertical"
+            android:visibility="gone"
+            >
+            <Switch
+                android:id="@+id/sw_scr_shot_service"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@color/color_tranparent"
+                android:gravity="start|center"
+                android:padding="5dp"
+                android:text="ScreenShot Mode "
+                android:textStyle="bold"
+                android:textColor="@color/text_light"
+                android:textSize="10sp" />
+
+            <Switch
+                android:id="@+id/sw_clip_board_service"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:background="@color/color_tranparent"
+                android:gravity="start|center"
+                android:padding="10dp"
+                android:text="Clipboard Mode "
+                android:textStyle="bold"
+                android:textColor="@color/text_light"
+                android:textSize="10sp" />
+        </LinearLayout>
+    </TableRow>
+
+    <LinearLayout
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical">
+
+        <ImageButton
+            android:id="@+id/ib_exit_wm"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginLeft="10dp"
+            android:layout_marginRight="10dp"
+            android:background="@color/bg_transparent"
+            android:src="@drawable/ic_cancel_48dp" />
+
+        <ImageButton
+            android:id="@+id/ib_move"
+            android:layout_width="match_parent"
+            android:layout_height="38dp"
+            android:layout_marginTop="4dp"
+            android:gravity="center"
+            android:src="@drawable/ic_move"
+            android:background="@color/bg_transparent"
+            android:textColor="@color/text_light"
+            android:textSize="15sp" />
+    </LinearLayout>
+
+
+</LinearLayout>

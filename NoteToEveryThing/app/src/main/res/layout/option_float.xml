@@ -58,4 +58,15 @@
         android:background="@color/color_tranparent"
         android:src="@drawable/ic_long_click" />
 
+    <ImageButton
+        android:id="@+id/ib_save"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_below="@id/ib_long_click"
+        android:layout_marginTop="30dp"
+        android:layout_marginLeft="75dp"
+        android:background="@color/color_tranparent"
+        android:src="@drawable/ic_save_50dp"
+        />
+
 </RelativeLayout>

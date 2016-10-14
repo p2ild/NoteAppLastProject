@@ -1,5 +1,6 @@
 package com.p2ild.notetoeverything.other;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 
 /**
