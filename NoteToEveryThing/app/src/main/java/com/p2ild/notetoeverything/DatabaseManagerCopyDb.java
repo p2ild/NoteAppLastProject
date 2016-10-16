@@ -223,7 +223,7 @@ public class DatabaseManagerCopyDb implements Serializable {
     }
 
     /*Đọc tất cả các dữ liệu. Gọi ở chỗ setAdapter của RecycleView trong Fragment Main*/
-    public Cursor readAllData(String type) {
+    public Cursor readAllDataWithColumnTypeSave(String type) {
         openDb();
         // TODO: 9/1/2016 ---DONE--- Xóa table nên select từ table bị lỗi
         String sql = "";
@@ -238,7 +238,23 @@ public class DatabaseManagerCopyDb implements Serializable {
         /** Dòng log này cấm xóa
          * Không hiểu tại sao nhưng nếu bỏ dòng log này đi chương trình sẽ lỗi
          **/
-        Log.d(TAG, "readAllData: cursorCheck"+ cursor.getCount());
+        Log.d(TAG, "readAllDataWithColumnTypeSave: cursorCheck"+ cursor.getCount());
+        closeDb();
+        return cursor;
+    }
+
+    public Cursor readAllDataWithColumnWifiName(String wifiName) {
+        openDb();
+        // TODO: 9/1/2016 ---DONE--- Xóa table nên select từ table bị lỗi
+        String sql = "";
+//        updateWifiName(sql);
+            sql = "SELECT " + "*" + " FROM " + TABLE_NAME + " WHERE " + NAME_COLUMN_WIFI_NAME + "='" + wifiName + "'";
+
+        Cursor cursor = db.rawQuery(sql, null);
+        /** Dòng log này cấm xóa
+         * Không hiểu tại sao nhưng nếu bỏ dòng log này đi chương trình sẽ lỗi
+         **/
+        Log.d(TAG, "readAllDataWithColumnTypeSave: cursorCheck"+ cursor.getCount());
         closeDb();
         return cursor;
     }
@@ -361,7 +377,7 @@ public class DatabaseManagerCopyDb implements Serializable {
 
                 /*Back up tất cả các ảnh và thumbnail của nó
                 * */
-                Cursor cursor = readAllData("All");//Load cursor chỉ copy những ảnh nào note còn tồn tại trong database
+                Cursor cursor = readAllDataWithColumnTypeSave("All");//Load cursor chỉ copy những ảnh nào note còn tồn tại trong database
                 cursor.moveToFirst();
                 int percent = 0;
                 while (!cursor.isAfterLast()) {
@@ -600,7 +616,6 @@ public class DatabaseManagerCopyDb implements Serializable {
             @Override
             protected Void doInBackground(Integer... values) {
                 openDb();
-                Cursor cursor = readAllData("All");
 
                 int percent = 0;
                 File listFile = new File(PATH_APP_INTERNAL + "/imageSave");

@@ -12,14 +12,15 @@
         android:layout_height="match_parent"
         android:orientation="vertical">
         <RelativeLayout
+            android:id="@+id/rl_image"
+            android:layout_above="@+id/fr_info"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content">
             <ImageView
                 android:id="@+id/img_preview"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content"
+                android:layout_height="match_parent"
                 android:scaleType="center"
-                android:src="@drawable/placeholder"
                 android:layout_centerInParent="true"
                 />
             <TextView
@@ -30,6 +31,7 @@
                 android:textColor="@color/text_light"/>
         </RelativeLayout>
         <FrameLayout
+            android:id="@+id/fr_info"
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
             <include layout="@layout/preview_info_item"

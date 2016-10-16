@@ -77,7 +77,7 @@ public class FrgAddNote extends Fragment implements View.OnTouchListener, Detect
         turnOnGps(getActivity());
     }
 
-    private void turnOnGps(Context context) {
+    private void turnOnGps(final Context context) {
         // TODO: 2016-10-09 Appservice chưa có location
         locationManager = (LocationManager) context.getSystemService(Context.LOCATION_SERVICE);
         if (!locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
@@ -88,7 +88,7 @@ public class FrgAddNote extends Fragment implements View.OnTouchListener, Detect
                 @Override
                 public void onClick(DialogInterface dialogInterface, int i) {
                     Intent intent = new Intent(Settings.ACTION_LOCATION_SOURCE_SETTINGS);
-                    (getActivity()).startActivity(intent);
+                        context.startActivity(intent);
                 }
             });
             alertDialog.setButton(AlertDialog.BUTTON_NEGATIVE, "No", new DialogInterface.OnClickListener() {

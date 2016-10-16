@@ -88,6 +88,9 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
     private TextView tvCountNote;
     private Cursor allCursor;
     private TextView tvFuntion;
+    private String typeWifi="";
+    private String tempNameOfWifi ="";
+
 
     @Override
     public void onCreate(@Nullable Bundle savedInstanceState) {
@@ -107,8 +110,8 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
         this.db = ((MainActivity) getActivity()).getDb();
 
         this.typeSavePara = ((MainActivity) getActivity()).getTypeSave();
-        this.cursor = db.readAllData(typeSavePara);
-        allCursor = db.readAllData("All");
+        this.cursor = db.readAllDataWithColumnTypeSave(typeSavePara);
+        allCursor = db.readAllDataWithColumnTypeSave("All");
     }
 
     @Override
@@ -155,9 +158,18 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
         swipeRefreshLayout.setOnRefreshListener(new SwipeRefreshLayout.OnRefreshListener() {
             @Override
             public void onRefresh() {
+                rcv.removeOnItemTouchListener(rcvOnItemTouchListioner);
                 swipeRefreshLayout.setRefreshing(true);
+                Log.d(TAG, "onRefresh: "+activity.getTypeSave());
+                if(tempNameOfWifi.equals(activity.getTypeSave())){
+                    cursor = db.readAllDataWithColumnWifiName(activity.getTypeSave());
+                }
+                else {
+                    cursor = db.readAllDataWithColumnTypeSave(activity.getTypeSave());
+                }
+                Log.d(TAG, "onRefresh: tempNameOfWifi : "+tempNameOfWifi);
+                Log.d(TAG, "onRefresh: getTypeSave " + activity.getTypeSave());
                 Log.d(TAG, "onRefresh: cursor count: " + cursor.getCount());
-                cursor = db.readAllData(activity.getTypeSave());
                 recycleNoteAdapter.swapDataUseCursor(cursor);
                 AsyncTask<Integer, Integer, Integer> task = new AsyncTask<Integer, Integer, Integer>() {
                     @Override
@@ -168,21 +180,26 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
                 };
                 task.execute();
                 swipeRefreshLayout.setRefreshing(false);
+                rcv.addOnItemTouchListener(rcvOnItemTouchListioner);
             }
         });
 
         rcv = (RecyclerView) rootView.findViewById(R.id.rcv);
         rcv.setHasFixedSize(true);
         customStaggeredGridLayoutManager = new CustomStaggeredGridLayoutManager(2, StaggeredGridLayoutManager.VERTICAL);
+
         rcv.setOnScrollListener(new RecyclerView.OnScrollListener() {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
+//                rcv.removeOnItemTouchListener(rcvOnItemTouchListioner);
                 into[0] = 0;
                 into[1] = 0;
             }
 
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+
+//                rcv.addOnItemTouchListener(rcvOnItemTouchListioner);
                 if (customStaggeredGridLayoutManager.findFirstCompletelyVisibleItemPositions(into)[0] == 0) {
                     swipeRefreshLayout.setEnabled(true);
                 } else {
@@ -204,8 +221,11 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
             /*Hiện float option*/
             @Override
             public void onLongClick(View view, int position, final float rawX, final float rawY) {
+                Log.d(TAG, "onLongClick: rawX,rawY "+rawX+","+rawY);
+                Log.d(TAG, "onLongClick: rcv.findChildViewUnder(rawX,rawY): "+rcv.findChildViewUnder(rawX,rawY));
                 // TODO: 8/26/2016 ---Done--- Lần đầu tiên load float option sai vị trí
                 isLongClick = true;
+                Log.d(TAG, "onLongClick: isLongClick: "+isLongClick);
                 swipeRefreshLayout.setEnabled(false);
                 tvFuntion.setVisibility(View.VISIBLE);
 
@@ -430,16 +450,19 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
         spinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
-                String type = adapterView.getItemAtPosition(i).toString();
+                String type = adapterView.getItemAtPosition(i).toString();//Không trả về tên wifi hiện giờ mà trả về DatabaseManagerCopyDb.TYPE_WIFI_AVAILABLE
                 switch (type) {
                     case DatabaseManagerCopyDb.TYPE_CAPTURE:
+                        typeWifi="";//Lúc refresh k bị refresh vào arrayWifi
                         sharedPreferences.edit().putString(KEY_TYPE_SAVE, type).apply();//Khi Chụp hoặc lưu ảnh mới sẽ mở lại type cũ lên
                         cursor = activity.swapDb(type);
                         recycleNoteAdapter.swapDataUseCursor(cursor);
                         tvCountNote.setText("" + cursor.getCount());
+
 //                        ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
                         break;
                     case DatabaseManagerCopyDb.TYPE_CLIP_BOARD:
+                        typeWifi="";//Lúc refresh k bị refresh vào arrayWifi
                         // TODO: 9/20/2016 ---Done---Hiển thị thiếu clipboard
                         sharedPreferences.edit().putString(KEY_TYPE_SAVE, type).apply();
                         cursor = activity.swapDb(type);
@@ -448,6 +471,7 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
 //                        ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
                         break;
                     case DatabaseManagerCopyDb.TYPE_GALLERY:
+                        typeWifi="";//Lúc refresh k bị refresh vào arrayWifi
                         sharedPreferences.edit().putString(KEY_TYPE_SAVE, type).apply();
                         cursor = activity.swapDb(type);
                         recycleNoteAdapter.swapDataUseCursor(cursor);
@@ -455,6 +479,7 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
 //                        ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
                         break;
                     case DatabaseManagerCopyDb.TYPE_SCREEN_SHOT:
+                        typeWifi="";//Lúc refresh k bị refresh vào arrayWifi
                         sharedPreferences.edit().putString(KEY_TYPE_SAVE, type).apply();
                         cursor = activity.swapDb(type);
                         recycleNoteAdapter.swapDataUseCursor(cursor);
@@ -462,6 +487,7 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
 //                        ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
                         break;
                     case DatabaseManagerCopyDb.TYPE_TEXT_ONLY:
+                        typeWifi="";//Lúc refresh k bị refresh vào arrayWifi
                         sharedPreferences.edit().putString(KEY_TYPE_SAVE, type).apply();
                         cursor = activity.swapDb(type);
                         recycleNoteAdapter.swapDataUseCursor(cursor);
@@ -469,6 +495,7 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
 //                        ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
                         break;
                     case "All":
+                        typeWifi="";//Lúc refresh k bị refresh vào arrayWifi
                         sharedPreferences.edit().putString(KEY_TYPE_SAVE, "All").apply();
                         cursor = activity.swapDb("All");
                         recycleNoteAdapter.swapDataUseCursor(cursor);
@@ -477,7 +504,20 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
                         break;
 
                     case DatabaseManagerCopyDb.TYPE_WIFI_AVAILABLE:
-                        tvCountNote.setText("" + rcv.getAdapter().getItemCount());
+                        if(typeWifi.equals(FragmentMain.KEY_TYPE_SAVE)){
+                            tempNameOfWifi = activity.getTypeSave();//Backup tạm tên wifi hiện giờ sử dụng sharePre ra ngoài để lúc select lại còn get được
+                            recycleNoteAdapter.swapDataUseCursor(db.readAllDataWithColumnWifiName(tempNameOfWifi));
+                            tvCountNote.setText("" + rcv.getAdapter().getItemCount());
+                            sharedPreferences.edit().putString(KEY_TYPE_SAVE, tempNameOfWifi).apply();
+                            Log.d(TAG, "onItemSelected: tempNameOfWifi: "+tempNameOfWifi);
+                        }else {
+                            typeWifi= tempNameOfWifi;//restore lại tên dể load lại array từ database
+                            recycleNoteAdapter.swapDataUseCursor(db.readAllDataWithColumnWifiName(typeWifi));
+                            tvCountNote.setText("" + rcv.getAdapter().getItemCount());
+                            sharedPreferences.edit().putString(KEY_TYPE_SAVE, typeWifi).apply();
+                            Log.d(TAG, "onItemSelected: tempNameOfWifi: "+typeWifi);
+                        }
+                        Log.d(TAG, "onItemSelected: có comit mà");
 //                        ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
                         break;
                     default:
@@ -711,4 +751,9 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
 //                break;
 //        }
 //    }
+
+    /**Để phân biệt readDataWithWifi hay readDataWithTypeSave lúc refresh*/
+    public void setTypeWifi(String typeWifi) {
+        this.typeWifi = typeWifi;
+    }
 }

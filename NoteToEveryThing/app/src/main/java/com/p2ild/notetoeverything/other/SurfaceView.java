@@ -22,6 +22,12 @@ public class SurfaceView extends android.view.SurfaceView implements SurfaceHold
         getHolder().addCallback(this);
     }
 
+    public int getRotationCamera(){
+        Camera.CameraInfo cameraInfo = new Camera.CameraInfo();
+        Camera.getCameraInfo(Camera.CameraInfo.CAMERA_FACING_BACK,cameraInfo);
+        return cameraInfo.orientation;
+    }
+
     public SurfaceView(Context context, AttributeSet attrs) {
         super(context, attrs);
         getHolder().addCallback(this);
@@ -40,7 +46,6 @@ public class SurfaceView extends android.view.SurfaceView implements SurfaceHold
     /*Implement from Surfaceholder Callback*/
     @Override
     public void surfaceCreated(SurfaceHolder surfaceHolder) {
-
         //Camera preview
         camera = null;
         camera = camera.open();
@@ -67,7 +72,7 @@ public class SurfaceView extends android.view.SurfaceView implements SurfaceHold
                 Camera.Parameters cp = camera.getParameters();
                 cp.setFocusMode(Camera.Parameters.FOCUS_MODE_CONTINUOUS_PICTURE);
                 camera.setParameters(cp);
-                camera.setDisplayOrientation(90);
+                camera.setDisplayOrientation(getRotationCamera());
                 camera.setPreviewDisplay(surfaceHolder);
                 camera.startPreview();
             } catch (IOException e) {

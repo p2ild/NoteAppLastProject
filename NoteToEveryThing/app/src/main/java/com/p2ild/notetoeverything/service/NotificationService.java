@@ -5,6 +5,7 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.RingtoneManager;
@@ -12,9 +13,11 @@ import android.support.v4.app.NotificationCompat;
 import android.support.v4.app.TaskStackBuilder;
 import android.util.Log;
 
+import com.p2ild.notetoeverything.DatabaseManagerCopyDb;
 import com.p2ild.notetoeverything.R;
 import com.p2ild.notetoeverything.activity.MainActivity;
 import com.p2ild.notetoeverything.adapter.NoteItem;
+import com.p2ild.notetoeverything.frgment.FragmentMain;
 import com.p2ild.notetoeverything.other.DataSerializable;
 
 import java.util.ArrayList;
@@ -147,6 +150,8 @@ public class NotificationService extends NotificationCompat.Builder {
         if(arrayListNote!=null){
             Intent itWifiDetect = new Intent(context, MainActivity.class);
             itWifiDetect.putExtra(AppService.WIFI_DETECT+"",new DataSerializable(arrayListNote));
+            itWifiDetect.putExtra(FragmentMain.KEY_TYPE_SAVE,FragmentMain.KEY_TYPE_SAVE);
+
             PendingIntent piWifidetect = PendingIntent.getActivity(context,AppService.WIFI_DETECT,itWifiDetect,PendingIntent.FLAG_ONE_SHOT);
             setContentIntent(piWifidetect);
         }

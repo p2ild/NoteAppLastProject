@@ -52,7 +52,9 @@ import com.nineoldandroids.animation.Animator;
 import com.nineoldandroids.animation.AnimatorListenerAdapter;
 import com.p2ild.notetoeverything.DatabaseManagerCopyDb;
 import com.p2ild.notetoeverything.R;
+import com.p2ild.notetoeverything.activity.MainActivity;
 import com.p2ild.notetoeverything.adapter.NoteItem;
+import com.p2ild.notetoeverything.frgment.FragmentMain;
 import com.p2ild.notetoeverything.observer.ServiceFogroundNotiComplete;
 
 import org.greenrobot.eventbus.EventBus;
@@ -242,7 +244,7 @@ public class AppService extends Service implements View.OnClickListener, Service
 
             switch (intent.getIntExtra(KEY_SERVICE, 0)) {
                 case SERVICE_BACKUP:
-                    if (databaseManagerCopyDb.readAllData("All").getCount() > 0) {
+                    if (databaseManagerCopyDb.readAllDataWithColumnTypeSave("All").getCount() > 0) {
                         notificationService = new NotificationService(this, SERVICE_BACKUP);
                         NotificationService.upToNotify(ID_NOTI_BACKUP, notificationService.build(), AppService.this);
                         databaseManagerCopyDb.backupAllNote(this, notificationService, eventBus);
@@ -611,6 +613,8 @@ public class AppService extends Service implements View.OnClickListener, Service
                 try {
                     ArrayList<NoteItem> result = databaseManagerCopyDb.readDataWithWifi(ssid);
                     if (!ssid.equals("") && result != null) {
+                        SharedPreferences sharedPreferences = context.getSharedPreferences(MainActivity.SHARE_PREFERENCE, Context.MODE_PRIVATE);
+                        sharedPreferences.edit().putString(FragmentMain.KEY_TYPE_SAVE, ssid).apply();
                         int noteDetect = result.size();
                         if (noteDetect > 0) {
                             String contentTitle = noteDetect + " note được tìm thấy [Xem thêm]";

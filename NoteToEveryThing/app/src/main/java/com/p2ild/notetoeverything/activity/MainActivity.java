@@ -11,6 +11,7 @@ import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.ThumbnailUtils;
+import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.FileObserver;
@@ -60,8 +61,8 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public static final String KEY_ARR_DATA = "KEY_ARR_DATA";
     public static final String KEY_OBJECT_DB = "KEY_OBJECT_DB";
     public static final String KEY_POSTION_CLICK = "KEY_POSTION_CLICK";
+    public static final String SHARE_PREFERENCE = "SHARE_PREFERENCE";
     private static final String TAG = MainActivity.class.getSimpleName();
-    private static final String SHARE_PREFERENCE = "SHARE_PREFERENCE";
     private static final String SWITCH_SCREENSHOT = "SWITCH_SCREENSHOT";
     private static final String SWITCH_CLIPBOARD = "SWITCH_CLIPBOARD";
     private static final int REQUEST_PICK_IMAGE = 111;
@@ -74,11 +75,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private static final String KEY_TYPE_SAVE = "KEY_TYPE_SAVE";
     private static final int REQUEST_PERMISSION_DRAW_OVER_APP = 888;
     private static final int REQUEST_PERMISSION = 111;
-
+    int showFrgMain = 0;
     private ImageButton btAddNote;
-
     private Button btBackup, btRestore, btReset, btMapView;
-
     private boolean isExit;
     //Binh thuong hom nao a cung ngu muon the nay a
     private WifiGpsManager wifiGpsManager;
@@ -89,7 +88,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     private Switch swClipBoard;
     private SimpleDateFormat dateFormat;
     private Date date;
-
     private DrawerLayout.DrawerListener myDrawerListener;
     private SharedPreferences sharedPreferences;
     private FragmentMain frgMain;
@@ -111,7 +109,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         canRestore = true;
 
         dateFormat = new SimpleDateFormat("yyyy_MM_dd_HH_mm_ss");
-        date = new Date();
 
         eventBus = EventBus.getDefault();
         eventBus.register(this);
@@ -136,22 +133,21 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         (btMapView = (Button) findViewById(R.id.bt_map_view)).setOnClickListener(this);
         swScreenShots = (Switch) findViewById(R.id.sw_scr_shot);
         swClipBoard = (Switch) findViewById(R.id.sw_clip_board);
-        showFrgMain();
+        // TODO: 2016-10-15 Ban đầu showFrgMain ở đây ok chưa lỗi
     }
 
     private void initAll() {
         //Khởi tạo cơ sở dữ liệu load ảnh thêm sửa xóa
         Log.d(TAG, "initAll: ");
         initView();
+        showFrgMain();
         drw.addDrawerListener(myDrawerListener);
         initScreenShot();
         initClipBoard();
         //Khởi tạo view
         isExit = false;
         initOpenCV();
-
     }
-
 
     private void checkAppPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -185,20 +181,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
             }
             initAll();
         }
-
-        if (requestCode == REQUEST_PERMISSION_DRAW_OVER_APP && grantResults.length > 0) {
-            for (int i : grantResults) {
-                if (i == PackageManager.PERMISSION_DENIED) {
-                    Toast.makeText(MainActivity.this, "Nếu không cho phép quyền này chế độ screen shot và clipboard sẽ không hoạt động", Toast.LENGTH_SHORT).show();
-                    new Handler().postDelayed(new Runnable() {
-                        @Override
-                        public void run() {
-                            finish();
-                        }
-                    }, 2000);
-                }
-            }
-        }
     }
 
     private void initScreenShot() {
@@ -214,7 +196,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         } else {
                             Toast.makeText(MainActivity.this, "Find app NoteEveryThing on this list\n" +
                                     "And switch Permit drawing over other app to on", Toast.LENGTH_LONG).show();
-                            startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION));
+                            startActivityForResult(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName())), REQUEST_PERMISSION_DRAW_OVER_APP);
                         }
                     } else {
                         sharedPreferences.edit().putString(SWITCH_SCREENSHOT, "on").apply();
@@ -256,7 +238,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                         } else {
                             Toast.makeText(MainActivity.this, "Find app NoteEveryThing on this list\n" +
                                     "And switch Permit drawing over other app to on", Toast.LENGTH_LONG).show();
-                            startActivity(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION));
+                            startActivityForResult(new Intent(Settings.ACTION_MANAGE_OVERLAY_PERMISSION, Uri.parse("package:" + getPackageName())), REQUEST_PERMISSION_DRAW_OVER_APP);
                         }
                     } else {
                         sharedPreferences.edit().putString(SWITCH_CLIPBOARD, "on").apply();
@@ -288,8 +270,9 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     public boolean showArrayWifiDetect() {
         if (getIntent().getSerializableExtra(AppService.WIFI_DETECT + "") != null) {
             ArrayList arrayList = (ArrayList) ((DataSerializable) getIntent().getSerializableExtra(AppService.WIFI_DETECT + "")).getData();
+            Log.d(TAG, "showArrayWifiDetect: Vừa click vào notiWifiDetect");
             frgMain.getRecycleNoteAdapter().swapDataUseArray(arrayList);
-            Log.d(TAG, "showArrayWifiDetect: Chạy đến cuối");
+            frgMain.setTypeWifi(getIntent().getStringExtra(FragmentMain.KEY_TYPE_SAVE));//Để phân biệt readDataWithWifi hay readDataWithTypeSave lúc refresh
             return true;
         } else {
             return false;
@@ -299,58 +282,6 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
     @Override
     protected void onResume() {
         initView();
-
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            if (Settings.canDrawOverlays(this)) {
-                if (sharedPreferences.getString(SWITCH_SCREENSHOT, null) != null) {
-                    if (sharedPreferences.getString(SWITCH_SCREENSHOT, null).equals("on")) {
-                        swScreenShots.setChecked(true);
-                        Intent itScreenShot = new Intent(MainActivity.this, AppService.class);
-                        startService(itScreenShot);
-                    } else {
-                        swScreenShots.setChecked(false);
-                        Intent itScreenShot = new Intent(MainActivity.this, AppService.class);
-                        startService(itScreenShot);
-                    }
-                }
-
-                if (sharedPreferences.getString(SWITCH_CLIPBOARD, null) != null) {
-                    if (sharedPreferences.getString(SWITCH_CLIPBOARD, null).equals("on")) {
-                        swClipBoard.setChecked(true);
-                        Intent itClipboard = new Intent(MainActivity.this, AppService.class);
-                        startService(itClipboard);
-                    } else {
-                        swClipBoard.setChecked(false);
-                        Intent itClipboard = new Intent(MainActivity.this, AppService.class);
-                        startService(itClipboard);
-                    }
-                }
-            }
-        } else {
-            if (sharedPreferences.getString(SWITCH_SCREENSHOT, null) != null) {
-                if (sharedPreferences.getString(SWITCH_SCREENSHOT, null).equals("on")) {
-                    swScreenShots.setChecked(true);
-                    Intent itScreenShot = new Intent(MainActivity.this, AppService.class);
-                    startService(itScreenShot);
-                } else {
-                    swScreenShots.setChecked(false);
-                    Intent itScreenShot = new Intent(MainActivity.this, AppService.class);
-                    startService(itScreenShot);
-                }
-            }
-
-            if (sharedPreferences.getString(SWITCH_CLIPBOARD, null) != null) {
-                if (sharedPreferences.getString(SWITCH_CLIPBOARD, null).equals("on")) {
-                    swClipBoard.setChecked(true);
-                    Intent itClipboard = new Intent(MainActivity.this, AppService.class);
-                    startService(itClipboard);
-                } else {
-                    swClipBoard.setChecked(false);
-                    Intent itClipboard = new Intent(MainActivity.this, AppService.class);
-                    startService(itClipboard);
-                }
-            }
-        }
         super.onResume();
     }
 
@@ -382,9 +313,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         // TODO: 8/25/2016 Khởi tạo OpenCv xử lý ảnh
     }
 
-
     private void showFrgMain() {
 //        removeAllFragment();
+        showFrgMain++;
+        Log.d(TAG, "showFrgMain: countShowFrgMain: " + showFrgMain);
+        Log.d(TAG, "showFrgMain: ");
         // TODO: 8/31/2016 ---Done--- Update data recycle view chưa sử dụng notifyDataSetChange
         if (frgMain == null) {
             frgMain = new FragmentMain();
@@ -440,10 +373,15 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     public void showFrgAddNote(final String imgPath, final String imgThumbnailPath, final String typeSave) {
         FrgAddNote frgAdd = new FrgAddNote(imgPath, imgThumbnailPath, typeSave);
+
         getFragmentManager()
                 .beginTransaction()
+//                .remove(frgMain)
+//                .hide(frgMain)
                 .replace(R.id.activity_main, frgAdd)
                 .commit();
+        Log.d(TAG, "showFrgAddNote: frgMain state: " + frgMain.isHidden());
+        Log.d(TAG, "showFrgAddNote: frgAdd state: " + frgAdd.isHidden());
     }
 
     public void showFrgCapture() {
@@ -482,7 +420,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         if (isExit) {
             super.onBackPressed();
         } else
-            Toast.makeText(MainActivity.this, "- Press back to refesh data\n- Double press back to exit", Toast.LENGTH_SHORT).show();
+            Toast.makeText(MainActivity.this, "Double press back to exit", Toast.LENGTH_SHORT).show();
         isExit = true;
         new Handler().postDelayed(new Runnable() {
             @Override
@@ -548,7 +486,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 break;
             case R.id.bt_map_view:
                 Intent intent = new Intent(MainActivity.this, MapActivity.class);
-                ArrayList<NoteItem> noteItemArrayList = RecycleNoteAdapter.cursorToArrayList(db.readAllData("All"));
+                ArrayList<NoteItem> noteItemArrayList = RecycleNoteAdapter.cursorToArrayList(db.readAllDataWithColumnTypeSave("All"));
                 intent.putExtra(KEY_OBJECT_DB, new DataSerializable(noteItemArrayList));
                 startActivity(intent);
                 drw.closeDrawer(Gravity.LEFT);
@@ -567,26 +505,22 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
         startActivityForResult(intent, REQUEST_PICK_IMAGE);
     }
 
-
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         // TODO: 9/19/2016 Pick 2 ảnh thành 1 ảnh
 //        super.onActivityResult(requestCode, resultCode, data);
 
         if (requestCode == REQUEST_PICK_IMAGE && resultCode == RESULT_OK) {
-            Log.d(TAG, "onActivityResult: ");
             if (data == null) {
                 return;
             }
-
+            date = new Date();
             String fileNameImage = "note" + dateFormat.format(date) + ".jpg";
             String fileNameImageThumbnail = "note" + dateFormat.format(date) + "_thumbnail.jpg";
             db.createDefaultFolderInternal();
+            final File fileOutputImg = new File(DatabaseManagerCopyDb.PATH_APP_INTERNAL + "/imageSave/" + fileNameImage);
+            final File fileOutputThumbnail = new File(DatabaseManagerCopyDb.PATH_APP_INTERNAL + "/imageSave/" + fileNameImageThumbnail);
             try {
-                InputStream inputStreamImg = getContentResolver().openInputStream(data.getData());
-
-                final File fileOutputImg = new File(DatabaseManagerCopyDb.PATH_APP_INTERNAL + "/imageSave/" + fileNameImage);
-                final File fileOutputThumbnail = new File(DatabaseManagerCopyDb.PATH_APP_INTERNAL + "/imageSave/" + fileNameImageThumbnail);
                 FileObserver fileObserver = new FileObserver(DatabaseManagerCopyDb.PATH_APP_INTERNAL + "/imageSave") {
                     @Override
                     public void onEvent(int event, String path) {
@@ -598,7 +532,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                     }
                 };
                 fileObserver.startWatching();
+
+                //Copy img vào bộ nhớ trong
+                InputStream inputStreamImg = getContentResolver().openInputStream(data.getData());
                 FileOutputStream outputImg = new FileOutputStream(fileOutputImg);
+                Log.d(TAG, "onActivityResult: outPut name: " + fileOutputImg.getName());
                 byte[] b = new byte[1024];
                 int length;
                 while ((length = inputStreamImg.read(b)) != -1) {
@@ -607,6 +545,7 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 inputStreamImg.close();
                 outputImg.close();
 
+                //Copy imgThumbnail vào bộ nhớ trong
                 InputStream inputStreamThumbnail = getContentResolver().openInputStream(data.getData());
                 Bitmap src = BitmapFactory.decodeStream(inputStreamThumbnail);
                 Bitmap bitmap = ThumbnailUtils.extractThumbnail(src, src.getWidth() / 3, src.getHeight() / 3);
@@ -622,6 +561,48 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
                 e.printStackTrace();
             }
         }
+
+
+        if(Build.VERSION.SDK_INT>=Build.VERSION_CODES.M){
+            if (requestCode == REQUEST_PERMISSION_DRAW_OVER_APP) {
+                if (Settings.canDrawOverlays(this)) {
+                    if (sharedPreferences.getString(SWITCH_SCREENSHOT, null) != null) {
+                        if (sharedPreferences.getString(SWITCH_SCREENSHOT, null).equals("on")) {
+                            swScreenShots.setChecked(true);
+                            Intent itScreenShot = new Intent(MainActivity.this, AppService.class);
+                            startService(itScreenShot);
+                        } else {
+                            swScreenShots.setChecked(false);
+                            Intent itScreenShot = new Intent(MainActivity.this, AppService.class);
+                            startService(itScreenShot);
+                        }
+                    }
+
+                    if (sharedPreferences.getString(SWITCH_CLIPBOARD, null) != null) {
+                        if (sharedPreferences.getString(SWITCH_CLIPBOARD, null).equals("on")) {
+                            swClipBoard.setChecked(true);
+                            Intent itClipboard = new Intent(MainActivity.this, AppService.class);
+                            startService(itClipboard);
+                        } else {
+                            swClipBoard.setChecked(false);
+                            Intent itClipboard = new Intent(MainActivity.this, AppService.class);
+                            startService(itClipboard);
+                        }
+                    }
+                }else {
+                    Toast.makeText(MainActivity.this, "Nếu không cho phép quyền này chế độ screen shot và clipboard sẽ không hoạt động", Toast.LENGTH_SHORT).show();
+                    new Handler().postDelayed(new Runnable() {
+                        @Override
+                        public void run() {
+                            finish();
+                        }
+                    }, 2000);
+                    swScreenShots.setChecked(false);
+                    swClipBoard.setChecked(false);
+                }
+
+            }
+        }
     }
 
 //    @Subscribe(sticky = true, threadMode = ThreadMode.MAIN)
@@ -633,12 +614,11 @@ public class MainActivity extends AppCompatActivity implements View.OnClickListe
 
     @Override
     protected void onPause() {
-        eventBus.unregister(this);
         super.onPause();
     }
 
     public Cursor swapDb(String typeSelect) {
-        return db.readAllData(typeSelect);
+        return db.readAllDataWithColumnTypeSave(typeSelect);
     }
 
     @Subscribe(sticky = true)
