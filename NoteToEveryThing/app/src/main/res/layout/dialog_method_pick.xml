@@ -23,7 +23,7 @@
             android:text="Text only"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:textColor="@color/text_light"
+            android:textColor="@color/colorBackground"
             android:gravity="center"
             android:textSize="30sp"
             />
@@ -45,8 +45,7 @@
             android:text="Gallery"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:textColor="@color/text_light"
-            android:gravity="center"
+            android:textColor="@color/colorBackground"            android:gravity="center"
             android:textSize="30sp"
             />
     </LinearLayout>
@@ -68,9 +67,8 @@
             android:text="Capture"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:textColor="@color/text_light"
+            android:textColor="@color/colorBackground"
             android:gravity="center"
-            android:textSize="30sp"
-            />
+            android:textSize="30sp" />
     </LinearLayout>
 </LinearLayout>

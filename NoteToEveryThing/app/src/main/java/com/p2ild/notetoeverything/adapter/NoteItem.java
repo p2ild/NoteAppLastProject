@@ -2,7 +2,7 @@ package com.p2ild.notetoeverything.adapter;
 
 import android.database.Cursor;
 
-import com.p2ild.notetoeverything.DatabaseManagerCopyDb;
+import com.p2ild.notetoeverything.DatabaseManager;
 
 import java.io.Serializable;
 
@@ -24,13 +24,13 @@ public class NoteItem implements Serializable{
     }
 
     public NoteItem(Cursor cursor){
-        this.noteTitle      = cursor.getString(cursor.getColumnIndex(DatabaseManagerCopyDb.NAME_COLUMN_TITLE_NOTE));
-        this.noteContent    = cursor.getString(cursor.getColumnIndex(DatabaseManagerCopyDb.NAME_COLUMN_CONTENT_NOTE));
-        this.pathImg        = cursor.getString(cursor.getColumnIndex(DatabaseManagerCopyDb.NAME_COLUMN_PATH_IMAGE_NOTE));
-        this.pathThumbnail  = cursor.getString(cursor.getColumnIndex(DatabaseManagerCopyDb.NAME_COLUMN_PATH_THUMBNAIL_IMAGE_NOTE));
-        this.typeSave       = cursor.getString(cursor.getColumnIndex(DatabaseManagerCopyDb.NAME_COLUMN_TYPE_SAVE));
-        this.latlong        = cursor.getString(cursor.getColumnIndex(DatabaseManagerCopyDb.NAME_COLUMN_LATLONG));
-        this.wifiName          = cursor.getString(cursor.getColumnIndex(DatabaseManagerCopyDb.NAME_COLUMN_WIFI_NAME));
+        this.noteTitle      = cursor.getString(cursor.getColumnIndex(DatabaseManager.NAME_COLUMN_TITLE_NOTE));
+        this.noteContent    = cursor.getString(cursor.getColumnIndex(DatabaseManager.NAME_COLUMN_CONTENT_NOTE));
+        this.pathImg        = cursor.getString(cursor.getColumnIndex(DatabaseManager.NAME_COLUMN_PATH_IMAGE_NOTE));
+        this.pathThumbnail  = cursor.getString(cursor.getColumnIndex(DatabaseManager.NAME_COLUMN_PATH_THUMBNAIL_IMAGE_NOTE));
+        this.typeSave       = cursor.getString(cursor.getColumnIndex(DatabaseManager.NAME_COLUMN_TYPE_SAVE));
+        this.latlong        = cursor.getString(cursor.getColumnIndex(DatabaseManager.NAME_COLUMN_LATLONG));
+        this.wifiName          = cursor.getString(cursor.getColumnIndex(DatabaseManager.NAME_COLUMN_WIFI_NAME));
     }
 
     public String getNoteTitle() {

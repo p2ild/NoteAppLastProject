@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingBottom="20dp"
+    android:gravity="center"
+    android:id="@+id/root_view_alarm"
+    android:background="@color/colorBackground"
+    >
+        <DatePicker
+            android:id="@+id/d_pick"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent" />
+
+        <TimePicker
+            android:id="@+id/t_pick"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:visibility="gone" />
+        <ImageButton
+            android:id="@+id/ib_set_alarm"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:src="@drawable/ic_alarm_clock"
+            android:background="@color/bg_transparent"
+            />
+
+        <TextView
+            android:id="@+id/tv_pick_date"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pick Date"
+            android:textColor="@color/color_primary_text"
+            android:layout_alignParentBottom="true"
+            android:paddingRight="15dp"
+            android:layout_alignParentRight="true"
+            android:drawableRight="@drawable/ic_chevron_right_black_24dp"
+            android:visibility="gone"
+            />
+
+        <TextView
+            android:id="@+id/tv_pick_time"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Pick Time"
+            android:textColor="@color/color_primary_text"
+            android:layout_alignParentBottom="true"
+            android:drawableLeft="@drawable/ic_chevron_left_black_24dp"
+            android:paddingLeft="15dp"
+            />
+</RelativeLayout>

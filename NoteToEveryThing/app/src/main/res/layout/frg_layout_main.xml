@@ -2,6 +2,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:background="@color/colorBackground"
     android:orientation="vertical">
 
     <include
@@ -9,7 +11,7 @@
         layout="@layout/action_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_margin="15dp" />
+        android:layout_margin="5dp" />
 
     <android.support.v4.widget.SwipeRefreshLayout
         android:id="@+id/swiperf"
@@ -17,15 +19,30 @@
         android:layout_height="match_parent"
         android:layout_below="@id/include_action_bar">
 
-        <android.support.v7.widget.RecyclerView
-            android:id="@+id/rcv"
+        <RelativeLayout
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:layout_below="@id/include_action_bar"
-            android:layout_marginLeft="5dp"
-            android:layout_marginRight="5dp">
+            android:layout_below="@id/include_action_bar">
+            <android.support.v7.widget.RecyclerView
+                android:id="@+id/rcv"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="5dp"
+                android:layout_marginRight="5dp">
+            </android.support.v7.widget.RecyclerView>
+            <TextView
+                android:id="@+id/tv_no_note"
+                android:gravity="center"
+                android:layout_centerInParent="true"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:drawableLeft="@drawable/ic_havent_note"
+                android:textSize="30sp"
+                android:text="Chưa có ghi chú"
+                android:visibility="gone"
+                />
+        </RelativeLayout>
 
-        </android.support.v7.widget.RecyclerView>
     </android.support.v4.widget.SwipeRefreshLayout>
 
     <TextView
@@ -39,11 +56,11 @@
         android:layout_height="match_parent"
         android:background="@color/color_transparent_90"
         android:text="FUNTION FOCUS"
-        android:textColor="@color/text_light"
+        android:textColor="@color/colorBackground"
         android:textSize="20sp"
         android:gravity="top|end"
         android:paddingRight="10dp"
-        android:paddingTop="40dp"
+        android:paddingTop="100dp"
         android:textStyle="bold"
         android:visibility="gone"
         />
@@ -53,13 +70,17 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content" />
 
-    <ImageButton
+
+    <android.support.design.widget.FloatingActionButton
         android:id="@+id/bt_add_note"
-        android:layout_width="70dp"
-        android:layout_height="70dp"
+        android:layout_margin="25dp"
         android:layout_alignParentBottom="true"
         android:layout_alignParentRight="true"
-        android:layout_margin="25dp"
-        android:background="@drawable/ic_add" />
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:src="@drawable/ic_add_black_24dp"
+        app:elevation="20dp"
+        app:backgroundTint="@color/colorAccent"
+        />
 
 </RelativeLayout>

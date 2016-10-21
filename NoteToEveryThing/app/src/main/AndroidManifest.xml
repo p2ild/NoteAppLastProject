@@ -32,14 +32,15 @@
         android:resizeableActivity="true"
         android:supportsPictureInPicture="true"
         android:theme="@style/AppThem">
-        <activity android:name=".activity.MainActivity">
+        <activity android:name=".activity.MainActivity"
+            android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".activity.NoteContentActivity" />
+        <activity android:name=".activity.NotePagerActivity" />
 
         <service android:name=".service.AppService" />
 

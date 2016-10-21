@@ -5,101 +5,167 @@
     android:background="@color/cardview_shadow_start_color"
     android:orientation="vertical">
 
-    <RelativeLayout
+    <TableRow
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:background="@color/color_action_bar"
+        android:background="@color/colorPrimary"
+        android:gravity="center_vertical"
         android:padding="20dp">
 
-        <TextView
+        <ImageButton
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_centerInParent="true"
-            android:background="@drawable/circle"
-            android:gravity="center"
-            android:text="dev.p2ild"
-            android:textSize="20sp"
-            android:textStyle="bold" />
-    </RelativeLayout>
+            android:background="@color/bg_transparent"
+            android:src="@drawable/ic_account" />
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/colorPrimary"
+            android:gravity="center_vertical"
+            android:orientation="vertical"
+            android:padding="15dp">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/primaryText"
+                android:text="dev.p2ild"
+                android:textSize="15sp"
+                android:layout_weight="1"
+                />
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:textColor="@color/secondaryText"
+                android:text="dev.p2ild@example.com"
+                android:textSize="10sp"
+                android:layout_weight="1"
+                />
+        </LinearLayout>
+    </TableRow>
 
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@drawable/placeholder_greensea"
-        >
+        android:background="@color/colorBackground">
+
         <LinearLayout
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical">
-            <Switch
-                android:id="@+id/sw_scr_shot"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="start|center"
-                android:padding="10dp"
-                android:text="ScreenShot Mode"
-                android:textColor="@color/text_light"
-                android:background="@color/color_tranparent"
-                android:textSize="20sp" />
-
-            <Switch
-                android:id="@+id/sw_clip_board"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:gravity="start|center"
-                android:padding="10dp"
-                android:text="Clipboard Mode"
-                android:background="@color/color_tranparent"
-                android:textColor="@color/text_light"
-                android:textSize="20sp" />
-
             <Button
                 android:id="@+id/bt_map_view"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@color/color_tranparent"
+                android:drawableLeft="@drawable/ic_map_view"
+                android:drawablePadding="20dp"
                 android:gravity="start|center"
                 android:padding="10dp"
-                android:text="MapView"
-                android:textAlignment="center"
-                android:textColor="@color/text_light"
-                android:textSize="20sp" />
-
-            <Button
-                android:id="@+id/bt_backup"
+                android:text="Map view"
+                android:textColor="@color/primaryText"
+                android:textSize="15sp"
+                android:textAllCaps="false"
+                />
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scaleType="fitCenter"
+                android:src="@drawable/line"/>
+            <Switch
+                android:id="@+id/sw_scr_shot"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@color/color_tranparent"
                 android:gravity="start|center"
                 android:padding="10dp"
-                android:text="Sao lưu dữ liệu"
-                android:textAlignment="center"
-                android:textColor="@color/text_light"
-                android:textSize="20sp" />
+                android:text="ScreenShot Mode"
+                android:textColor="@color/primaryText"
+                android:textSize="15sp"
+                android:textAllCaps="false"
+                />
+
+            <Switch
+                android:id="@+id/sw_clip_board"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/color_tranparent"
+                android:gravity="start|center"
+                android:padding="10dp"
+                android:text="Clipboard Mode"
+                android:textColor="@color/primaryText"
+                android:textSize="15sp"
+                android:textAllCaps="false"
+                />
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scaleType="fitCenter"
+                android:src="@drawable/line"/>
+
+            <Button
+                android:id="@+id/bt_backup"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:background="@color/color_tranparent"
+                android:drawableLeft="@drawable/ic_backup"
+                android:drawablePadding="20dp"
+                android:gravity="start|center"
+                android:padding="10dp"
+                android:text="Sao lưu"
+                android:textColor="@color/primaryText"
+                android:textSize="15sp"
+                android:textAllCaps="false"/>
 
             <Button
                 android:id="@+id/bt_restore"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@color/color_tranparent"
+                android:drawableLeft="@drawable/ic_restore"
+                android:drawablePadding="20dp"
                 android:gravity="start|center"
                 android:padding="10dp"
-                android:text="Phục hồi dữ liệu"
-                android:textAlignment="center"
-                android:textColor="@color/text_light"
-                android:textSize="20sp" />
+                android:text="Phục hồi"
+                android:textColor="@color/primaryText"
+                android:textSize="15sp"
+                android:textAllCaps="false"/>
 
             <Button
                 android:id="@+id/bt_reset_note"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:background="@color/color_tranparent"
+                android:drawableLeft="@drawable/ic_delete"
+                android:drawablePadding="20dp"
                 android:gravity="start|center"
                 android:padding="10dp"
-                android:text="Xóa hết các note đã lưu"
-                android:textAlignment="center"
-                android:textColor="@color/text_light"
-                android:textSize="20sp"/>
+                android:text="Xóa hết ghi chú"
+                android:textColor="@color/primaryText"
+                android:textSize="15sp"
+                android:textAllCaps="false"/>
+
+            <ImageView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:scaleType="fitCenter"
+                android:src="@drawable/line"/>
+
+            <Button
+                android:id="@+id/bt_help"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:background="@color/color_tranparent"
+                android:drawableLeft="@drawable/ic_huong_dan"
+                android:drawablePadding="20dp"
+                android:gravity="start|center"
+                android:padding="10dp"
+                android:text="Thông tin ứng dụng"
+                android:textColor="@color/primaryText"
+                android:textSize="15sp"
+                android:textAllCaps="false"/>
+
 
         </LinearLayout>
     </ScrollView>

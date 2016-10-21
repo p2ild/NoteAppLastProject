@@ -5,9 +5,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
-import android.widget.BaseAdapter;
-import android.widget.CheckBox;
-import android.widget.RadioButton;
 import android.widget.TextView;
 
 import com.p2ild.notetoeverything.R;
@@ -45,7 +42,7 @@ public class SpinnerAdapterTypeSave extends ArrayAdapter {
 
     @Override
     public View getView(int position, View convertView, ViewGroup parent) {
-        convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_spinne_type_save, parent, false);
+        convertView = LayoutInflater.from(parent.getContext()).inflate(R.layout.item_spinner_type_save, parent, false);
         ((TextView) convertView.findViewById(R.id.tv_type_save)).setText(arrType.get(position));
         return convertView;
     }

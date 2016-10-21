@@ -8,6 +8,8 @@ import android.content.SharedPreferences;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteCantOpenDatabaseException;
 import android.database.sqlite.SQLiteDatabase;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.os.AsyncTask;
 import android.os.Environment;
 import android.os.Handler;
@@ -16,7 +18,8 @@ import android.widget.Toast;
 
 import com.p2ild.notetoeverything.adapter.NoteItem;
 import com.p2ild.notetoeverything.adapter.RecycleNoteAdapter;
-import com.p2ild.notetoeverything.locationmanager.WifiGpsManager;
+import com.p2ild.notetoeverything.locationmanager.MapManager;
+import com.p2ild.notetoeverything.observer.NeedUpdateData;
 import com.p2ild.notetoeverything.service.AppService;
 import com.p2ild.notetoeverything.service.NotificationService;
 
@@ -37,7 +40,7 @@ import java.util.Random;
 /**
  * Created by duypi on 8/20/2016.
  */
-public class DatabaseManagerCopyDb implements Serializable {
+public class DatabaseManager implements Serializable {
     // TODO: 9/28/2016 Chuyen sang dung realm
     //SQLiteOpenHelper, ormlite, is sqlite
     //tuy ban
@@ -77,26 +80,28 @@ public class DatabaseManagerCopyDb implements Serializable {
     public static final int MSG_UPDATE_PERCENT_BACKUP = 444;
     public static final int MSG_UPDATE_PERCENT_RESTORE = 555;
     public static final int MSG_UPDATE_PERCENT_DELETE = 666;
+    public static final String TYPE_WIFI_AVAILABLE = "Wifi  available";
+    public static final String TYPE_GPS_AVAILABLE = "Gps available";
+    public static final String FOLDER_SHARE_NAME = "ImageShare";
     private static final String SHARE_PREFERENCE = "SHARE_PREFERENCE";
-    private static final String TAG = DatabaseManagerCopyDb.class.getSimpleName();
+    private static final String TAG = DatabaseManager.class.getSimpleName();
     private static final String DATABASE_NAME = "DB_NOTE";
     private static final int VERSION = 1;
     private static final String TABLE_NAME = "TB_NOTE";
     private static final String FOLDER_BACKUP_NAME = "BackupNoteToEveryThing";
     private static final String FOLDER_EXPORT_IMAGE = "ImageExport";
     private static final String SWITCH_SCREENSHOT = "SWITCH_SCREENSHOT";
-    public static final String TYPE_WIFI_AVAILABLE = "note in wifi  available";
-
     private final Context context;
     private SharedPreferences sharedPreferences;
 
     private SQLiteDatabase db;
     private NotificationManager notificationManager;
+    private NeedUpdateData needUpdateData;
 
-    public DatabaseManagerCopyDb(Context context) {
+    public DatabaseManager(Context context, NeedUpdateData needUpdateData) {
+        this.needUpdateData = needUpdateData;
         this.context = context;
         sharedPreferences = context.getSharedPreferences(SHARE_PREFERENCE, Context.MODE_PRIVATE);
-
         createDefaultFolderInternal();
 
 //        createTableIfNotExists();
@@ -111,7 +116,8 @@ public class DatabaseManagerCopyDb implements Serializable {
                 FileOutputStream outputDb = new FileOutputStream(fileOut);
                 byte[] b = new byte[1024];
                 int length;
-                Log.d(TAG, "copyFile: fileOut" + fileOut.getName());
+                Log.d(TAG, "copyFile: fileOut" + fileOut.getPath());
+                Log.d(TAG, "copyFile: ===============================");
                 while ((length = inputDb.read(b)) != -1) {
                     outputDb.write(b, 0, length);
                 }
@@ -181,7 +187,6 @@ public class DatabaseManagerCopyDb implements Serializable {
     public void openDb() {
         if (db == null || !db.isOpen()) {
             db = SQLiteDatabase.openDatabase(PATH_APP_INTERNAL + "/databases/" + DATABASE_NAME, null, SQLiteDatabase.OPEN_READWRITE);
-        } else {
         }
     }
 
@@ -235,11 +240,13 @@ public class DatabaseManagerCopyDb implements Serializable {
         }
 
         Cursor cursor = db.rawQuery(sql, null);
+
         /** Dòng log này cấm xóa
          * Không hiểu tại sao nhưng nếu bỏ dòng log này đi chương trình sẽ lỗi
          **/
-        Log.d(TAG, "readAllDataWithColumnTypeSave: cursorCheck"+ cursor.getCount());
+        Log.d(TAG, "readAllDataWithColumnTypeSave: cursorCheck" + cursor.getCount());
         closeDb();
+//        needUpdateData.updateSpinner();
         return cursor;
     }
 
@@ -248,13 +255,13 @@ public class DatabaseManagerCopyDb implements Serializable {
         // TODO: 9/1/2016 ---DONE--- Xóa table nên select từ table bị lỗi
         String sql = "";
 //        updateWifiName(sql);
-            sql = "SELECT " + "*" + " FROM " + TABLE_NAME + " WHERE " + NAME_COLUMN_WIFI_NAME + "='" + wifiName + "'";
+        sql = "SELECT " + "*" + " FROM " + TABLE_NAME + " WHERE " + NAME_COLUMN_WIFI_NAME + "='" + wifiName + "'";
 
         Cursor cursor = db.rawQuery(sql, null);
         /** Dòng log này cấm xóa
          * Không hiểu tại sao nhưng nếu bỏ dòng log này đi chương trình sẽ lỗi
          **/
-        Log.d(TAG, "readAllDataWithColumnTypeSave: cursorCheck"+ cursor.getCount());
+        Log.d(TAG, "readAllDataWithColumnTypeSave: cursorCheck" + cursor.getCount());
         closeDb();
         return cursor;
     }
@@ -265,7 +272,7 @@ public class DatabaseManagerCopyDb implements Serializable {
         String sql;
         String wifi_detected = "";
         if (detectWifi) {
-            wifi_detected = WifiGpsManager.getSSIDWifi(context);
+            wifi_detected = MapManager.getSSIDWifi(context);
         } else {
             wifi_detected = wifiName;
         }
@@ -273,27 +280,15 @@ public class DatabaseManagerCopyDb implements Serializable {
         values.put(NAME_COLUMN_TITLE_NOTE, titleNote);
         values.put(NAME_COLUMN_CONTENT_NOTE, contentNote);
         values.put(NAME_COLUMN_PATH_IMAGE_NOTE, imgPath);
-        values.put(NAME_COLUMN_PATH_THUMBNAIL_IMAGE_NOTE, imgThumbnailPath);
+        values.put(NAME_COLUMN_PATH_THUMBNAIL_IMAGE_NOTE, "");
         values.put(NAME_COLUMN_TYPE_SAVE, typeSave);
         values.put(NAME_COLUMN_LATLONG, latLong);
         values.put(NAME_COLUMN_ALARM, alarm);
         values.put(NAME_COLUMN_WIFI_NAME, wifi_detected);
         db.insert(TABLE_NAME, null, values);
 
-        sharedPreferences.edit().putString(UPDATE_DATABASE, UPDATE_DATABASE).apply();
+//        sharedPreferences.edit().putString(UPDATE_DATABASE, UPDATE_DATABASE).apply();
 //        db.execSQL(sql);
-        closeDb();
-    }
-
-    /*Sửa 1 note ờ cơ sở dữ liệu*/
-    public void update(String oldTitle, String titleNote, String contentNote) {
-        openDb();
-        String sql = "UPDATE " + TABLE_NAME + " SET "
-                + "" + NAME_COLUMN_TITLE_NOTE + " ='" + replaceCharApostrophe(titleNote) + "',"
-                + "" + NAME_COLUMN_CONTENT_NOTE + " ='" + replaceCharApostrophe(contentNote) + "'"
-                + " WHERE " + NAME_COLUMN_TITLE_NOTE + "='" + replaceCharApostrophe(oldTitle) + "'";
-        db.execSQL(sql);
-        sharedPreferences.edit().putString(UPDATE_DATABASE, UPDATE_DATABASE).apply();
         closeDb();
     }
 
@@ -304,9 +299,9 @@ public class DatabaseManagerCopyDb implements Serializable {
         openDb();
         String[] whereClause = new String[]{noteTitleDelete, noteContentDelete, noteImg, noteThumbnail, typeSave, latlong, alarm, wifiName};
         Log.d(TAG, "deleteNote: " + Arrays.toString(whereClause));
-        for (int i = 0 ; i<whereClause.length;i++) {
-            if(whereClause[i]==null){
-                whereClause[i]="";
+        for (int i = 0; i < whereClause.length; i++) {
+            if (whereClause[i] == null) {
+                whereClause[i] = "";
             }
         }
         //        del row
@@ -320,7 +315,6 @@ public class DatabaseManagerCopyDb implements Serializable {
                         + NAME_COLUMN_ALARM + "=? AND "
                         + NAME_COLUMN_WIFI_NAME + "=?"
                 , whereClause);
-        Log.d(TAG, "deleteNote: " + Arrays.toString(whereClause));
 
         //del img
         if (noteImg != null && !noteImg.equals("")) {
@@ -342,6 +336,18 @@ public class DatabaseManagerCopyDb implements Serializable {
                 Log.d(TAG, "THUMBNAIL fail : file không tồn tại");
             }
         }
+        closeDb();
+    }
+
+    /*Sửa 1 note ờ cơ sở dữ liệu*/
+    public void update(String oldTitle, String titleNote, String contentNote) {
+        openDb();
+        String sql = "UPDATE " + TABLE_NAME + " SET "
+                + "" + NAME_COLUMN_TITLE_NOTE + " ='" + replaceCharApostrophe(titleNote) + "',"
+                + "" + NAME_COLUMN_CONTENT_NOTE + " ='" + replaceCharApostrophe(contentNote) + "'"
+                + " WHERE " + NAME_COLUMN_TITLE_NOTE + "='" + replaceCharApostrophe(oldTitle) + "'";
+        db.execSQL(sql);
+        sharedPreferences.edit().putString(UPDATE_DATABASE, UPDATE_DATABASE).apply();
         closeDb();
     }
 
@@ -393,12 +399,12 @@ public class DatabaseManagerCopyDb implements Serializable {
                     }
 
                     //Copy file thumbnail
-                    String pathThumbnail = cursor.getString(COLUMN_PATH_THUMBNAIL_IMAGE_NOTE);
-                    if (pathThumbnail != null && pathThumbnail.equals("")) {
-                        File fileThumbnailIn = new File(cursor.getString(COLUMN_PATH_THUMBNAIL_IMAGE_NOTE));//Đầu vào là file lấy từ cursor đang trỏ tới
-                        File fileThumbnailOut = new File(folderImageSave.getPath() + "/" + fileThumbnailIn.getName());//Đầu ra là file trong thư mục ở External
-                        copyFile(fileThumbnailIn, fileThumbnailOut, false);
-                    }
+//                    String pathThumbnail = cursor.getString(COLUMN_PATH_THUMBNAIL_IMAGE_NOTE);
+//                    if (pathThumbnail != null && pathThumbnail.equals("")) {
+//                        File fileThumbnailIn = new File(cursor.getString(COLUMN_PATH_THUMBNAIL_IMAGE_NOTE));//Đầu vào là file lấy từ cursor đang trỏ tới
+//                        File fileThumbnailOut = new File(folderImageSave.getPath() + "/" + fileThumbnailIn.getName());//Đầu ra là file trong thư mục ở External
+//                        copyFile(fileThumbnailIn, fileThumbnailOut, false);
+//                    }
 
 //                MediaScannerConnection.scanFile(context, new String[]{file1.getPath()}, null, null);
                     if (cursor.getPosition() == (cursor.getCount() - 1)) {
@@ -473,7 +479,13 @@ public class DatabaseManagerCopyDb implements Serializable {
                     //Phục hồi file database vào bộ nhớ internal
                     File fileDbIn = new File(folderBackup.getPath() + "/" + DATABASE_NAME);
                     File fileDbOut = new File(PATH_APP_INTERNAL + "/databases/" + DATABASE_NAME);
-                    syncDatabaseFile(fileDbIn, fileDbOut);
+                    if (fileDbIn.exists()) {
+                        syncDatabaseFile(fileDbIn, fileDbOut);
+                    } else {
+                        copyAssetDbToInternal();
+                        syncDatabaseFile(fileDbIn, fileDbOut);
+                    }
+
 
                     //Phục hồi file ảnh vào bộ nhớ
                     for (File pointer : folderImageSave.listFiles()) {
@@ -570,16 +582,15 @@ public class DatabaseManagerCopyDb implements Serializable {
             String readAll = "SELECT * FROM " + TABLE_NAME;
             Cursor inputCursor = inputFileDb.rawQuery(readAll, null);
             int i = 0;
-            Cursor cursorCheckExists = null;
             for (inputCursor.moveToFirst(); !inputCursor.isAfterLast(); inputCursor.moveToNext()) {
-                String noteTitleReplace = inputCursor.getString(DatabaseManagerCopyDb.COLUMN_TITLE_NOTE);
-                String noteContentReplace = inputCursor.getString(DatabaseManagerCopyDb.COLUMN_CONTENT_NOTE);
-                String noteImgReplace = inputCursor.getString(DatabaseManagerCopyDb.COLUMN_PATH_IMAGE_NOTE);
-                String noteThumbnailReplace = inputCursor.getString(DatabaseManagerCopyDb.COLUMN_PATH_THUMBNAIL_IMAGE_NOTE);
-                String noteTypeSaveReplace = inputCursor.getString(DatabaseManagerCopyDb.COLUMN_TYPE_SAVE);
-                String noteLatlongReplace = inputCursor.getString(DatabaseManagerCopyDb.COLUMN_LATLONG);
-                String noteAlarm = inputCursor.getString(DatabaseManagerCopyDb.COLUMN_ALARM);
-                String wifiName = inputCursor.getString(DatabaseManagerCopyDb.COLUMN_WIFI_NAME);
+                String noteTitleReplace = inputCursor.getString(DatabaseManager.COLUMN_TITLE_NOTE);
+                String noteContentReplace = inputCursor.getString(DatabaseManager.COLUMN_CONTENT_NOTE);
+                String noteImgReplace = inputCursor.getString(DatabaseManager.COLUMN_PATH_IMAGE_NOTE);
+                String noteThumbnailReplace = inputCursor.getString(DatabaseManager.COLUMN_PATH_THUMBNAIL_IMAGE_NOTE);
+                String noteTypeSaveReplace = inputCursor.getString(DatabaseManager.COLUMN_TYPE_SAVE);
+                String noteLatlongReplace = inputCursor.getString(DatabaseManager.COLUMN_LATLONG);
+                String noteAlarm = inputCursor.getString(DatabaseManager.COLUMN_ALARM);
+                String wifiName = inputCursor.getString(DatabaseManager.COLUMN_WIFI_NAME);
                 String sqlCheckExit =
                         "SELECT 1 FROM " + TABLE_NAME + " WHERE "
                                 + NAME_COLUMN_TITLE_NOTE + "='" + replaceCharApostrophe(noteTitleReplace) + "' AND "
@@ -590,8 +601,9 @@ public class DatabaseManagerCopyDb implements Serializable {
                                 + NAME_COLUMN_WIFI_NAME + "='" + replaceCharApostrophe(wifiName) + "'";
                 // TODO: 2016-10-09 add thêm điều kiện
                 i++;
+
                 openDb();
-                cursorCheckExists = db.rawQuery(sqlCheckExit, null);
+                Cursor cursorCheckExists = db.rawQuery(sqlCheckExit, null);
                 if (cursorCheckExists.getCount() == 0) {
                     Log.d(TAG, "syncDatabaseFile: CHƯA TỒN TẠI");
                     // TODO: 9/28/2016 Trùng quá nhiều ' và chưa add wifi
@@ -619,7 +631,7 @@ public class DatabaseManagerCopyDb implements Serializable {
 
                 int percent = 0;
                 File listFile = new File(PATH_APP_INTERNAL + "/imageSave");
-                int length =  listFile.listFiles().length;
+                int length = listFile.listFiles().length;
                 for (File f : listFile.listFiles()) {
                     f.delete();
                     percent++;
@@ -690,6 +702,11 @@ public class DatabaseManagerCopyDb implements Serializable {
             folderBackup.mkdir();
         }
 
+        File folderShare = new File(folderBackup.getPath() + "/" + FOLDER_SHARE_NAME);
+        if (!folderShare.exists()) {
+            folderShare.mkdir();
+        }
+
         File folderImageSave = new File(folderBackup.getPath() + "/imageSave");
         if (!folderImageSave.exists()) {
             folderImageSave.mkdir();
@@ -731,5 +748,109 @@ public class DatabaseManagerCopyDb implements Serializable {
         File fileImgOut = new File(folderExportImage + "/" + fileImgIn.getName().replace("Screenshot", "Note"));
         copyFile(fileImgIn, fileImgOut, true);
         Toast.makeText(context, "Export complete", Toast.LENGTH_SHORT).show();
+    }
+
+    public String copyImgShare(String pathImgShare) {
+        createDefaultFolderExternal();
+        String nameFileOut = new File(pathImgShare).getName();
+        File fileOut = null;
+//        if(!nameFileOut.contains("jpg")){
+//            Log.d(TAG, "copyImgShare: Before: "+nameFileOut);
+//            String nameWithOutExtension = nameFileOut.split("\\.")[0];
+//            nameFileOut = "";
+//            nameFileOut = nameWithOutExtension+".jpg";
+//            try {
+//                        fileOut =new File(Environment.getExternalStorageDirectory()+"/"+FOLDER_BACKUP_NAME+"/"+FOLDER_SHARE_NAME+"/"+nameFileOut);
+//                FileOutputStream imgOut = new FileOutputStream(fileOut);
+//                BitmapFactory.decodeFile(pathImgShare).compress(Bitmap.CompressFormat.JPEG,100,imgOut);
+//            } catch (FileNotFoundException e) {
+//                Log.d(TAG, "copyImgShare: error: "+e);
+//                e.printStackTrace();
+//            }
+//            Log.d(TAG, "copyImgShare: After: "+nameFileOut);
+//        }
+
+        fileOut = new File(Environment.getExternalStorageDirectory() + "/" + FOLDER_BACKUP_NAME + "/" + FOLDER_SHARE_NAME + "/" + nameFileOut);
+        copyFile(new File(pathImgShare), fileOut, true);
+        Log.d(TAG, "copyImgShare: fileOutPath: " + fileOut.getPath());
+        return fileOut.getPath();
+    }
+
+    public ArrayList<NoteItem> readDataWithLocation(String latAround, String lonAround) {
+        ArrayList<NoteItem> allNote = new ArrayList<>();
+        openDb();
+        String sql = "SELECT * FROM " + TABLE_NAME;
+        Cursor cursor = db.rawQuery(sql, null);
+        for (cursor.moveToFirst(); !cursor.isAfterLast(); cursor.moveToNext()) {
+            allNote.add(new NoteItem(cursor.getString(COLUMN_TITLE_NOTE),
+                    cursor.getString(COLUMN_CONTENT_NOTE),
+                    cursor.getString(COLUMN_PATH_IMAGE_NOTE),
+                    cursor.getString(COLUMN_PATH_THUMBNAIL_IMAGE_NOTE),
+                    cursor.getString(COLUMN_TYPE_SAVE),
+                    cursor.getString(COLUMN_LATLONG),
+                    cursor.getString(COLUMN_WIFI_NAME)));
+        }
+
+        ArrayList<NoteItem> noteWithLatlong = new ArrayList<>();
+        for (NoteItem item : allNote) {
+            if (!item.getLatlong().equals("")) {//điều kiện note có vị trí
+                for (int i = 0; i < 9; i++) {
+                    if (item.getLatlong().contains(latAround + i) && item.getLatlong().contains(lonAround)) {//Đk tồn tại sau dấu phẩy 3 chữ số với chữ số thứ 3 chạy từ 1 đến 9
+                        if(!noteWithLatlong.contains(item))
+                        noteWithLatlong.add(item);
+                    }
+                    if (item.getLatlong().contains(latAround) && item.getLatlong().contains(lonAround+i)) {//Đk tồn tại sau dấu phẩy 3 chữ số với chữ số thứ 3 chạy từ 1 đến 9
+                        if(!noteWithLatlong.contains(item)){// không thêm nếu if bên trên đã thêm vào rồi
+                            noteWithLatlong.add(item);
+                        }
+                    }
+                }
+            }
+        }
+        Log.d(TAG, "readDataWithLocation: noteWithLatLong size: " + noteWithLatlong.size());
+
+        closeDb();
+        return noteWithLatlong;
+    }
+
+    /*Bitmap decode*/
+    public static int calculateInSampleSize(
+            BitmapFactory.Options options, int reqWidth, int reqHeight) {
+        // Raw height and width of image
+        final int height = options.outHeight;
+        final int width = options.outWidth;
+        int inSampleSize = 1;
+
+        if (height > reqHeight || width > reqWidth) {
+
+            final int halfHeight = height / 2;
+            final int halfWidth = width / 2;
+
+            // Calculate the largest inSampleSize value that is a power of 2 and keeps both
+            // height and width larger than the requested height and width.
+            while ((halfHeight / inSampleSize) >= reqHeight
+                    && (halfWidth / inSampleSize) >= reqWidth) {
+                inSampleSize *= 2;
+            }
+        }
+
+        return inSampleSize;
+    }
+
+    public static Bitmap decodeSampledBitmapFromResource(String path,
+                                                         int reqWidth, int reqHeight) {
+
+        // First decode with inJustDecodeBounds=true to check dimensions
+        final BitmapFactory.Options options = new BitmapFactory.Options();
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(path, options);
+
+
+        // Calculate inSampleSize
+        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+
+        // Decode bitmap with inSampleSize set
+        options.inJustDecodeBounds = false;
+        return BitmapFactory.decodeFile(path, options);
     }
 }

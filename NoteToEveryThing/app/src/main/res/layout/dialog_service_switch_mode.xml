@@ -7,23 +7,25 @@
     <TableRow
         android:layout_width="wrap_content"
         android:layout_height="wrap_content">
+
         <ImageButton
             android:id="@+id/ib_show_expand"
             android:layout_width="match_parent"
             android:layout_height="90dp"
+            android:background="@color/bg_transparent"
             android:gravity="center"
             android:padding="2dp"
-            android:background="@color/bg_transparent"
-            android:textColor="@color/text_light"
+            android:textColor="@color/primaryText"
             android:textSize="15sp" />
+
         <LinearLayout
             android:id="@+id/ll_service_switch"
             android:layout_width="wrap_content"
             android:layout_height="match_parent"
             android:background="@drawable/shape_conner_switch"
             android:orientation="vertical"
-            android:visibility="gone"
-            >
+            android:visibility="gone">
+
             <Switch
                 android:id="@+id/sw_scr_shot_service"
                 android:layout_width="match_parent"
@@ -33,9 +35,9 @@
                 android:gravity="start|center"
                 android:padding="5dp"
                 android:text="ScreenShot Mode "
-                android:textStyle="bold"
-                android:textColor="@color/text_light"
-                android:textSize="10sp" />
+                android:textColor="@color/bg_edit_text"
+                android:textSize="10sp"
+                android:textStyle="bold" />
 
             <Switch
                 android:id="@+id/sw_clip_board_service"
@@ -46,9 +48,9 @@
                 android:gravity="start|center"
                 android:padding="10dp"
                 android:text="Clipboard Mode "
-                android:textStyle="bold"
-                android:textColor="@color/text_light"
-                android:textSize="10sp" />
+                android:textColor="@color/bg_edit_text"
+                android:textSize="10sp"
+                android:textStyle="bold" />
         </LinearLayout>
     </TableRow>
 
@@ -71,10 +73,10 @@
             android:layout_width="match_parent"
             android:layout_height="38dp"
             android:layout_marginTop="4dp"
+            android:background="@color/bg_transparent"
             android:gravity="center"
             android:src="@drawable/ic_move"
-            android:background="@color/bg_transparent"
-            android:textColor="@color/text_light"
+            android:textColor="@color/primaryText"
             android:textSize="15sp" />
     </LinearLayout>
 

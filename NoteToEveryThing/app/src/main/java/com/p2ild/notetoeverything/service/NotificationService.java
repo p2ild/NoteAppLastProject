@@ -5,15 +5,11 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.media.RingtoneManager;
 import android.support.v4.app.NotificationCompat;
-import android.support.v4.app.TaskStackBuilder;
-import android.util.Log;
 
-import com.p2ild.notetoeverything.DatabaseManagerCopyDb;
 import com.p2ild.notetoeverything.R;
 import com.p2ild.notetoeverything.activity.MainActivity;
 import com.p2ild.notetoeverything.adapter.NoteItem;
@@ -30,7 +26,7 @@ public class NotificationService extends NotificationCompat.Builder {
     public static final String NOTI_SHOW_TYPE = "NOTI_SHOW_TYPE";
     public static final String NOTI_CONTENT = "NOTI_CONTENT";
     private static final String TAG = NotificationService.class.getSimpleName();
-    private  ArrayList<NoteItem> arrayListNote;
+    private ArrayList<NoteItem> arrayListNote;
     private Context context;
     private String titleNoti;
     private String noteDetect, noteTitleNewest, noteContentNewest, path;
@@ -48,7 +44,7 @@ public class NotificationService extends NotificationCompat.Builder {
     /**
      * Đối với Screenshot và Clipboard
      */
-    public NotificationService(Context context,ArrayList<NoteItem> o, int type, String noteDetect, String noteTitleNewest, String noteContentNewest, String path) {
+    public NotificationService(Context context, ArrayList<NoteItem> o, int type, String noteDetect, String noteTitleNewest, String noteContentNewest, String path) {
         super(context);
         this.context = context;
         this.noteDetect = noteDetect;
@@ -71,54 +67,34 @@ public class NotificationService extends NotificationCompat.Builder {
             //Noti allway show
             case AppService.ID_NOTI_SERVICE:
                 setSmallIcon(R.drawable.ic_noti_app_note_128);
-                setLargeIcon(BitmapFactory.decodeResource(context.getResources(),R.drawable.ic_noti_app_note_orange));
+                setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_noti_app_note_orange));
                 setContentTitle("Note Everything is already");
                 setContentText("How are you today?");
 
                 Intent itNotiService = new Intent(context, AppService.class);
-                itNotiService.putExtra(NOTI_SHOW_TYPE, AppService.NOTI_SWITCH);
-                PendingIntent piNotiService = PendingIntent.getService(context, AppService.NOTI_SWITCH, itNotiService, PendingIntent.FLAG_UPDATE_CURRENT);
+                itNotiService.putExtra(NOTI_SHOW_TYPE, AppService.NOTI_SWITCH_ALLWAY_SHOW);
+                PendingIntent piNotiService = PendingIntent.getService(context, AppService.NOTI_SWITCH_ALLWAY_SHOW, itNotiService, PendingIntent.FLAG_UPDATE_CURRENT);
                 setContentIntent(piNotiService);
                 break;
             case AppService.SERVICE_BACKUP:
                 setSmallIcon(R.drawable.ic_noti_backup_running);
-                setLargeIcon(BitmapFactory.decodeResource(context.getResources(),R.drawable.ic_noti_backup_running_orange));
+                setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_noti_backup_running_orange));
                 setContentTitle("Backup note ..");
                 break;
             case AppService.SERVICE_RESTORE:
                 setSmallIcon(R.drawable.ic_noti_backup_running);
-                setLargeIcon(BitmapFactory.decodeResource(context.getResources(),R.drawable.ic_noti_backup_running_orange));
+                setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_noti_backup_running_orange));
                 setContentTitle("Restore note ..");
                 break;
             case AppService.SERVICE_DELETE:
                 setSmallIcon(R.drawable.ic_noti_backup_running);
-                setLargeIcon(BitmapFactory.decodeResource(context.getResources(),R.drawable.ic_noti_backup_running_orange));
+                setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_noti_backup_running_orange));
                 setContentTitle("Delete note ..");
-                break;
-            case AppService.WIFI_DETECT:
-                setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
-                setSmallIcon(R.drawable.ic_noti_detect);
-                setLargeIcon(BitmapFactory.decodeResource(context.getResources(),R.drawable.ic_noti_detect_orange));
-                setContentTitle("Có " + noteDetect + " trong khu vực này");
-                //Dành cho clipboard
-                if (path == null || path.isEmpty()) {
-                    setStyle(new NotificationCompat.BigTextStyle(this)
-                            .bigText(noteContentNewest));
-                }
-                //Dành cho screenShot
-                else {
-                    setContentTitle(noteTitleNewest);
-                    Bitmap bitmap = BitmapFactory.decodeFile(path);
-                    setStyle(new NotificationCompat.BigPictureStyle(this)
-                            .setSummaryText(noteContentNewest)
-                            .bigPicture(bitmap));
-                }
-                setContentIntentForWifiDetect();
                 break;
             case AppService.NOTI_CLIPBOAD:
                 setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
                 setSmallIcon(R.drawable.ic_noti_clipboard);
-                setLargeIcon(BitmapFactory.decodeResource(context.getResources(),R.drawable.ic_noti_clipboard_orange));
+                setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_noti_clipboard_orange));
                 setContentTitle("Bạn vừa Copy, bạn có muốn save lại không ?");
                 setStyle(new NotificationCompat.BigTextStyle(this)
                         .bigText(noteContentNewest));
@@ -130,30 +106,81 @@ public class NotificationService extends NotificationCompat.Builder {
             case AppService.NOTI_SCREENSHOT:
                 setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
                 setSmallIcon(R.drawable.ic_noti_screen_shot);
-                setLargeIcon(BitmapFactory.decodeResource(context.getResources(),R.drawable.ic_noti_screen_shot_orange));
+                setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_noti_screen_shot_orange));
                 setContentTitle("Bạn vừa Chụp màn hình, bạn có muốn save lại không ?");
                 Bitmap bitmap = BitmapFactory.decodeFile(path);
                 setStyle(new NotificationCompat.BigPictureStyle(this)
                         .setSummaryText(noteContentNewest)
                         .bigPicture(bitmap));
                 Intent itScreenshot = new Intent(context, AppService.class);
-                itScreenshot.putExtra(NOTI_SHOW_TYPE,AppService.NOTI_SCREENSHOT);
+                itScreenshot.putExtra(NOTI_SHOW_TYPE, AppService.NOTI_SCREENSHOT);
                 PendingIntent piScreenshot = PendingIntent.getService(context, AppService.NOTI_SCREENSHOT, itScreenshot, PendingIntent.FLAG_UPDATE_CURRENT);
                 setContentIntent(piScreenshot);
+                break;
+            case AppService.WIFI_DETECT:
+                setSound(RingtoneManager.getDefaultUri(RingtoneManager.TYPE_NOTIFICATION));
+                setSmallIcon(R.drawable.ic_noti_wifi_detect);
+                setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_noti_wifi_detect_orange));
+                setContentTitle("Có " + noteDetect + " trong wifi này");
+                //Dành cho clipboard
+                if (path == null || path.isEmpty()) {
+                    setStyle(new NotificationCompat.BigTextStyle(this)
+                            .bigText(noteContentNewest));
+                }
+                //Dành cho screenShot
+                else {
+                    setContentTitle(noteTitleNewest);
+                    Bitmap bitmap1 = BitmapFactory.decodeFile(path);
+                    setStyle(new NotificationCompat.BigPictureStyle(this)
+                            .setSummaryText(noteContentNewest)
+                            .bigPicture(bitmap1));
+                }
+                setContentIntentForWifiDetect(AppService.WIFI_DETECT);
+                break;
+            case AppService.GPS_DETECT:
+                setSmallIcon(R.drawable.ic_noti_gps_detect);
+                setLargeIcon(BitmapFactory.decodeResource(context.getResources(), R.drawable.ic_noti_gps_detect_orange));
+                setContentTitle("Có " + noteDetect + " trong xung quanh khu vực này");
+                //Dành cho clipboard
+                if (path == null || path.isEmpty()) {
+                    setStyle(new NotificationCompat.BigTextStyle(this)
+                            .bigText(noteContentNewest));
+                }
+                //Dành cho screenShot
+                else {
+                    setContentTitle(noteTitleNewest);
+                    Bitmap bitmap1 = BitmapFactory.decodeFile(path);
+                    setStyle(new NotificationCompat.BigPictureStyle(this)
+                            .setSummaryText(noteContentNewest)
+                            .bigPicture(bitmap1));
+                }
+                setContentIntentForWifiDetect(AppService.GPS_DETECT);
                 break;
             default:
                 break;
         }
     }
 
-    private void setContentIntentForWifiDetect() {
-        if(arrayListNote!=null){
-            Intent itWifiDetect = new Intent(context, MainActivity.class);
-            itWifiDetect.putExtra(AppService.WIFI_DETECT+"",new DataSerializable(arrayListNote));
-            itWifiDetect.putExtra(FragmentMain.KEY_TYPE_SAVE,FragmentMain.KEY_TYPE_SAVE);
-
-            PendingIntent piWifidetect = PendingIntent.getActivity(context,AppService.WIFI_DETECT,itWifiDetect,PendingIntent.FLAG_ONE_SHOT);
-            setContentIntent(piWifidetect);
+    private void setContentIntentForWifiDetect(int type) {
+        if (arrayListNote != null) {
+            switch (type) {
+                case AppService.WIFI_DETECT:
+                    Intent itNoteDetect = new Intent(context, MainActivity.class);
+                    itNoteDetect.putExtra(FragmentMain.KEY_TYPE_SAVE, AppService.WIFI_DETECT+"");
+                    itNoteDetect.putExtra(AppService.WIFI_DETECT + "", new DataSerializable(arrayListNote));
+                    PendingIntent piWifiDetect = PendingIntent.getActivity(context, AppService.WIFI_DETECT, itNoteDetect, PendingIntent.FLAG_ONE_SHOT);
+                    setContentIntent(piWifiDetect);
+                    break;
+                case AppService.GPS_DETECT:
+                    Intent itGpsDetect = new Intent(context, MainActivity.class);
+                    itGpsDetect.putExtra(AppService.GPS_DETECT + "", new DataSerializable(arrayListNote));
+                    itGpsDetect.putExtra(FragmentMain.KEY_TYPE_SAVE, AppService.GPS_DETECT+"");
+                    PendingIntent piGpsDetect = PendingIntent.getActivity(context, AppService.GPS_DETECT, itGpsDetect, PendingIntent.FLAG_ONE_SHOT);
+                    setContentIntent(piGpsDetect);
+                    break;
+                default:
+                    break;
+            }
         }
     }
 

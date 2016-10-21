@@ -4,13 +4,12 @@ import android.support.v4.view.PagerAdapter;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
 import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.Priority;
-import com.p2ild.notetoeverything.DatabaseManagerCopyDb;
+import com.p2ild.notetoeverything.DatabaseManager;
 import com.p2ild.notetoeverything.R;
 
 import java.io.File;
@@ -25,7 +24,7 @@ public class MyPagerAdapterActNoteContent extends PagerAdapter {
     private static final String TAG = MyPagerAdapterActNoteContent.class.getSimpleName();
     private ImageView img;
     private ArrayList<NoteItem> data;
-    private EditText edNoteContent;
+    private TextView edNoteContent;
     private Random random = new Random();
 
     public MyPagerAdapterActNoteContent(ArrayList<NoteItem> arr) {
@@ -59,30 +58,35 @@ public class MyPagerAdapterActNoteContent extends PagerAdapter {
         final View rootView = LayoutInflater.from(container.getContext()).inflate(R.layout.item_view_pager, container, false);
 
         img = (ImageView) rootView.findViewById(R.id.iv_show_image);
-        ((EditText) rootView.findViewById(R.id.ed_content_note)).setText(data.get(position).getNoteContent());
+        if(data.get(position).getNoteContent().equals("")){
+            ((TextView) rootView.findViewById(R.id.ed_content_note)).setText("< Ghi chú này k có nội dung >");
+        }else {
+            ((TextView) rootView.findViewById(R.id.ed_content_note)).setText(data.get(position).getNoteContent());
+        }
+
 
         switch (data.get(position).getTypeSave()) {
-            case DatabaseManagerCopyDb.TYPE_CLIP_BOARD:
+            case DatabaseManager.TYPE_CLIP_BOARD:
                 ((TextView) rootView.findViewById(R.id.tv_type_save_item_page_view)).setVisibility(View.VISIBLE);
                 ((TextView) rootView.findViewById(R.id.tv_type_save_item_page_view)).setText(data.get(position).getTypeSave());
                 Glide
                         .with(container.getContext())
-                        .load(RecycleNoteAdapter.placeHolderColor[random.nextInt(4)])
+                        .load(R.drawable.placeholder_primary)
                         .fitCenter()
                         .priority(Priority.IMMEDIATE)
                         .into(img);
                 break;
-            case DatabaseManagerCopyDb.TYPE_TEXT_ONLY:
+            case DatabaseManager.TYPE_TEXT_ONLY:
                 ((TextView) rootView.findViewById(R.id.tv_type_save_item_page_view)).setVisibility(View.VISIBLE);
                 ((TextView) rootView.findViewById(R.id.tv_type_save_item_page_view)).setText(data.get(position).getTypeSave());
                 Glide
                         .with(container.getContext())
-                        .load(RecycleNoteAdapter.placeHolderColor[random.nextInt(4)])
+                        .load(R.drawable.placeholder_primary)
                         .fitCenter()
                         .priority(Priority.IMMEDIATE)
                         .into(img);
                 break;
-            case DatabaseManagerCopyDb.TYPE_CAPTURE:
+            case DatabaseManager.TYPE_CAPTURE:
                 Glide
                         .with(container.getContext())
                         .load(new File(data.get(position).getPathImg()))
@@ -90,7 +94,7 @@ public class MyPagerAdapterActNoteContent extends PagerAdapter {
                         .priority(Priority.IMMEDIATE)
                         .into(img);
                 break;
-            case DatabaseManagerCopyDb.TYPE_GALLERY:
+            case DatabaseManager.TYPE_GALLERY:
                 Glide
                         .with(container.getContext())
                         .load(new File(data.get(position).getPathImg()))
@@ -98,7 +102,7 @@ public class MyPagerAdapterActNoteContent extends PagerAdapter {
                         .priority(Priority.IMMEDIATE)
                         .into(img);
                 break;
-            case DatabaseManagerCopyDb.TYPE_SCREEN_SHOT:
+            case DatabaseManager.TYPE_SCREEN_SHOT:
                 Glide
                         .with(container.getContext())
                         .load(new File(data.get(position).getPathImg()))

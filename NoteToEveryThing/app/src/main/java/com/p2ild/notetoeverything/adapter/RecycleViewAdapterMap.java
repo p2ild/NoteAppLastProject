@@ -10,11 +10,9 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.bumptech.glide.Priority;
-import com.p2ild.notetoeverything.DatabaseManagerCopyDb;
+import com.p2ild.notetoeverything.DatabaseManager;
 import com.p2ild.notetoeverything.R;
 
-import java.io.File;
 import java.util.ArrayList;
 import java.util.Random;
 
@@ -41,56 +39,51 @@ public class RecycleViewAdapterMap extends RecyclerView.Adapter<RecycleViewAdapt
 
     @Override
     public void onBindViewHolder(MyViewHolder holder, int position) {
-        Log.d(TAG, "onBindViewHolder: "+arrNote.get(position).getPathImg());
         String pathImg = arrNote.get(position).getPathImg();
 
         switch (arrNote.get(position).getTypeSave()) {
-            case DatabaseManagerCopyDb.TYPE_CLIP_BOARD:
+            case DatabaseManager.TYPE_CLIP_BOARD:
                 holder.tvTitle.setText(arrNote.get(position).getNoteTitle());
-                holder.tvContent.setText(arrNote.get(position).getNoteContent());
-
                 holder.imageView.setScaleType(ImageView.ScaleType.FIT_XY);
-                holder.imageView.setImageResource(RecycleNoteAdapter.placeHolderColor[random.nextInt(4)]);
+                holder.imageView.setImageResource(R.drawable.placeholder_primary);
                 break;
-            case DatabaseManagerCopyDb.TYPE_TEXT_ONLY:
+            case DatabaseManager.TYPE_TEXT_ONLY:
                 holder.tvTitle.setText(arrNote.get(position).getNoteTitle());
-                holder.tvContent.setText(arrNote.get(position).getNoteContent());
-
                 holder.imageView.setScaleType(ImageView.ScaleType.FIT_XY);
-                holder.imageView.setImageResource(RecycleNoteAdapter.placeHolderColor[random.nextInt(4)]);
+                holder.imageView.setImageResource(R.drawable.placeholder_primary);
                 break;
-            case DatabaseManagerCopyDb.TYPE_CAPTURE:
+            case DatabaseManager.TYPE_CAPTURE:
                 holder.imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 Glide
                         .with(context)
                         .load(pathImg)
                         .placeholder(R.drawable.placeholder)
                         .crossFade()
-                        .fitCenter()
+                        .override(200,500)
                         .thumbnail(0.5f)
                         .into(holder.imageView);
                 break;
-            case DatabaseManagerCopyDb.TYPE_GALLERY:
+            case DatabaseManager.TYPE_GALLERY:
                 holder.imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 Glide
                         .with(context)
                         .load(pathImg)
                         .placeholder(R.drawable.placeholder)
                         .crossFade()
-                        .fitCenter()
+                        .override(200,500)
                         .thumbnail(0.5f)
                         .into(holder.imageView);
                 break;
-            case DatabaseManagerCopyDb.TYPE_SCREEN_SHOT:
+            case DatabaseManager.TYPE_SCREEN_SHOT:
                 holder.imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 Glide
                         .with(context)
                         .load(pathImg)
                         .placeholder(R.drawable.placeholder)
                         .crossFade()
-                        .fitCenter()
-                        .thumbnail(0.5f)
+                        .override(200,500)
                         .into(holder.imageView);
+                break;
             default:
                 break;
         }
@@ -102,20 +95,23 @@ public class RecycleViewAdapterMap extends RecyclerView.Adapter<RecycleViewAdapt
         return arrNote.size();
     }
 
+    public ArrayList<NoteItem> getArrayNote() {
+        return arrNote;
+    }
+
     public class MyViewHolder extends RecyclerView.ViewHolder {
         public ImageView imageView;
-        public TextView tvTitle,tvContent;
+        public TextView tvTitle;
         public MyViewHolder(View itemView) {
             super(itemView);
             imageView = (ImageView) itemView.findViewById(R.id.img_preview_map);
             tvTitle = (TextView)itemView.findViewById(R.id.tv_title_map);
-            tvContent = (TextView)itemView.findViewById(R.id.tv_content_map);
         }
     }
 
-    public void swapData(ArrayList<NoteItem> newData){
-        arrNote.clear();
-        arrNote.addAll(newData);
-        notifyDataSetChanged();
+    public void itemRemove(int position){
+        arrNote.remove(position);
+        notifyItemRemoved(position);
+        Log.d(TAG, "itemRemove: afterSwap: "+arrNote.size());
     }
 }

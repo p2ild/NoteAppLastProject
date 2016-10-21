@@ -4,12 +4,14 @@ import android.app.AlertDialog;
 import android.app.Fragment;
 import android.content.Context;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.content.SharedPreferences;
 import android.database.Cursor;
+import android.net.Uri;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.SystemClock;
-import android.support.annotation.Nullable;
+import android.support.design.widget.FloatingActionButton;
 import android.support.v4.widget.SwipeRefreshLayout;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.StaggeredGridLayoutManager;
@@ -27,16 +29,18 @@ import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.p2ild.notetoeverything.DatabaseManagerCopyDb;
+import com.p2ild.notetoeverything.DatabaseManager;
 import com.p2ild.notetoeverything.R;
 import com.p2ild.notetoeverything.activity.MainActivity;
 import com.p2ild.notetoeverything.adapter.RecycleNoteAdapter;
 import com.p2ild.notetoeverything.adapter.SpinnerAdapterTypeSave;
+import com.p2ild.notetoeverything.dialog.DialogAlarm;
 import com.p2ild.notetoeverything.dialog.DialogMethodCreateNewNote;
-import com.p2ild.notetoeverything.locationmanager.WifiGpsManager;
+import com.p2ild.notetoeverything.locationmanager.MapManager;
 import com.p2ild.notetoeverything.other.CustomStaggeredGridLayoutManager;
 import com.p2ild.notetoeverything.other.RecycleViewOnItemTouch;
 
+import java.io.File;
 import java.util.ArrayList;
 
 
@@ -54,9 +58,11 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
     private static final int BUTTON_SAVE = 5;
     private static final int BUTTON_UNSELECTED = 0;
     private static final String SHARE_PREFERENCE = "SHARE_PREFERENCE";
+    public static final String WIFI_NAME = "WIFI_NAME";
+    public static final String GPS_NAME = "GPS_NAME";
     MainActivity activity;
     // TODO: 2016-10-05 Chuyển cách import database
-    private DatabaseManagerCopyDb db;
+    private DatabaseManager db;
     private String typeSavePara;
     private Cursor cursor;
     private View rootView;
@@ -70,7 +76,7 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
     private float xMinIbDelete, yMinIbDelete, xMaxIbDelete, yMaxIbDelete;
     private float xMinIbShare, yMinIbShare, xMaxIbShare, yMaxIbShare;
     private float xMinIbSave, yMinIbSave, xMaxIbSave, yMaxIbSave;
-    private WifiGpsManager wifiGpsManager;
+    private MapManager mapManager;
     private RecyclerView.OnItemTouchListener rcvOnItemTouchListioner;
     private CustomStaggeredGridLayoutManager customStaggeredGridLayoutManager;//Custom view cho phép dừng hoặc tiếp tục scroll recycleView
     private boolean isLongClick;//Khônng cho phép ACTION_FOCUS và ACTION_UP thực thi khi chưa LONG_CLICK
@@ -88,20 +94,12 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
     private TextView tvCountNote;
     private Cursor allCursor;
     private TextView tvFuntion;
-    private String typeWifi="";
-    private String tempNameOfWifi ="";
-
-
-    @Override
-    public void onCreate(@Nullable Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-        inits();
-    }
+    private String typeNameOfWifi ="";
+    private String typeNameGps="";
 
     private void inits() {
 //        eventBus = EventBus.getDefault();
 //        eventBus.register(this);
-
         activity = (MainActivity) getActivity();
         sharedPreferences = activity.getSharedPreferences(SHARE_PREFERENCE, Context.MODE_PRIVATE);
         if (sharedPreferences.getString(KEY_TYPE_SAVE, null) == null) {
@@ -112,10 +110,13 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
         this.typeSavePara = ((MainActivity) getActivity()).getTypeSave();
         this.cursor = db.readAllDataWithColumnTypeSave(typeSavePara);
         allCursor = db.readAllDataWithColumnTypeSave("All");
+
+        Log.d(TAG, "inits: cursor: "+cursor.getCount());
     }
 
     @Override
     public View onCreateView(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState) {
+        inits();
         rootView = inflater.inflate(R.layout.frg_layout_main, container, false);
         recycleNoteAdapter = new RecycleNoteAdapter(getActivity(), cursor);
         initViewChild();
@@ -128,7 +129,7 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
     }
 
     private void initViewChild() {
-        ((ImageButton) rootView.findViewById(R.id.bt_add_note)).setOnClickListener(this);
+        ((FloatingActionButton) rootView.findViewById(R.id.bt_add_note)).setOnClickListener(this);
         ((ImageButton) rootView.findViewById(R.id.ib_menu)).setOnClickListener(this);
 
         tvCountNote = (TextView) rootView.findViewById(R.id.tv_count_note);
@@ -160,17 +161,18 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
             public void onRefresh() {
                 rcv.removeOnItemTouchListener(rcvOnItemTouchListioner);
                 swipeRefreshLayout.setRefreshing(true);
-                Log.d(TAG, "onRefresh: "+activity.getTypeSave());
-                if(tempNameOfWifi.equals(activity.getTypeSave())){
-                    cursor = db.readAllDataWithColumnWifiName(activity.getTypeSave());
+
+                if(typeNameOfWifi.equals(sharedPreferences.getString(WIFI_NAME,null))){
+                    cursor = db.readAllDataWithColumnWifiName(typeNameOfWifi);
+                    recycleNoteAdapter.swapDataUseCursor(cursor);
+                }else if(typeNameGps.equals(sharedPreferences.getString(GPS_NAME,null))){
+                    recycleNoteAdapter.swapDataUseArray(db.readDataWithLocation(typeNameGps.split(",")[0],typeNameGps.split(",")[1]));
                 }
                 else {
                     cursor = db.readAllDataWithColumnTypeSave(activity.getTypeSave());
+                    recycleNoteAdapter.swapDataUseCursor(cursor);
                 }
-                Log.d(TAG, "onRefresh: tempNameOfWifi : "+tempNameOfWifi);
-                Log.d(TAG, "onRefresh: getTypeSave " + activity.getTypeSave());
-                Log.d(TAG, "onRefresh: cursor count: " + cursor.getCount());
-                recycleNoteAdapter.swapDataUseCursor(cursor);
+
                 AsyncTask<Integer, Integer, Integer> task = new AsyncTask<Integer, Integer, Integer>() {
                     @Override
                     protected Integer doInBackground(Integer... integers) {
@@ -192,14 +194,22 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
             @Override
             public void onScrollStateChanged(RecyclerView recyclerView, int newState) {
 //                rcv.removeOnItemTouchListener(rcvOnItemTouchListioner);
+                if(newState==RecyclerView.SCROLL_STATE_DRAGGING){
+                    Log.d(TAG, "onScrollStateChanged: ");
+                }
                 into[0] = 0;
                 into[1] = 0;
             }
 
             @Override
             public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                View view = recyclerView.findChildViewUnder(dx,dy);
+//                ImageView imageView = (ImageView) view.getRootView().findViewById(R.id.img_preview);
+//                imageView.
+//                Log.d(TAG, "onScrolled: dx,dy: "+dx+","+dy);
+                int[] viewsIds = customStaggeredGridLayoutManager.findFirstCompletelyVisibleItemPositions(null);
+                Log.d(TAG, "onScrolled: "+viewsIds.length);
 
-//                rcv.addOnItemTouchListener(rcvOnItemTouchListioner);
                 if (customStaggeredGridLayoutManager.findFirstCompletelyVisibleItemPositions(into)[0] == 0) {
                     swipeRefreshLayout.setEnabled(true);
                 } else {
@@ -215,6 +225,8 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
             // TODO: 8/25/2016 ---Done--- Chưa xử lý code long press khi action up thì option float sẽ biến mất
             @Override
             public void onClick(View view, int position) {
+                cursor.moveToPosition(position);
+                Log.d(TAG, "onClick: "+cursor.getString(DatabaseManager.COLUMN_PATH_IMAGE_NOTE)+"::"+cursor.getString(DatabaseManager.COLUMN_PATH_THUMBNAIL_IMAGE_NOTE));
                 ((MainActivity) getActivity()).startNoteActivity(((RecycleNoteAdapter) rcv.getAdapter()).getArrData(), position);
             }
 
@@ -295,7 +307,7 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
             }
 
             @Override
-            public void onActionUp(float rawX, float rawY, int position) {
+            public void onActionUp(float rawX, float rawY, final int position) {
                 if (!isLongClick) {
                     return;
                 }
@@ -304,22 +316,46 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
                 switch (buttonFloatOption) {
                     case BUTTON_EDIT:
                         cursor.moveToPosition(positionCurrentItem);
-                        String title = cursor.getString(DatabaseManagerCopyDb.COLUMN_TITLE_NOTE);
-                        String content = cursor.getString(DatabaseManagerCopyDb.COLUMN_CONTENT_NOTE);
-                        String pathImg = cursor.getString(DatabaseManagerCopyDb.COLUMN_PATH_IMAGE_NOTE);
+                        String title = cursor.getString(DatabaseManager.COLUMN_TITLE_NOTE);
+                        String content = cursor.getString(DatabaseManager.COLUMN_CONTENT_NOTE);
+                        String pathImg = cursor.getString(DatabaseManager.COLUMN_PATH_IMAGE_NOTE);
                         ((MainActivity) getActivity()).showFrgEdit(title, content, pathImg);
                         rlFloatOption.setVisibility(View.GONE);
                         tvFuntion.setVisibility(View.GONE);
                         break;
                     case BUTTON_ALARM:
                         // TODO: 8/25/2016 Chưa xử lý code báo thức cho note
+                        DialogAlarm dialogAlarm = new DialogAlarm(activity);
+                        dialogAlarm.show();
                         rlFloatOption.setVisibility(View.GONE);
                         tvFuntion.setVisibility(View.GONE);
                         Toast.makeText(getActivity(), "This function can't use in this version", Toast.LENGTH_SHORT).show();
                         break;
                     case BUTTON_SHARE:
                         // TODO: 8/31/2016 sử dụng Share Action Provider - TL Lập trình ANDROID P38
-                        Toast.makeText(getActivity(), "This function can't use in this version", Toast.LENGTH_SHORT).show();
+
+                        Log.d(TAG, "onActionUp: "+positionCurrentItem);
+                        cursor.moveToPosition(positionCurrentItem);
+
+                        ArrayList<Uri> imageUris = new ArrayList<Uri>();
+                        String pathImgShare ="";
+                        pathImgShare = cursor.getString(cursor.getColumnIndex(DatabaseManager.NAME_COLUMN_PATH_IMAGE_NOTE));
+                        Log.d(TAG, "onActionUp: pathImgShare: "+pathImgShare);
+                        if(!pathImgShare.equals("")&&!pathImgShare.equals("null")){
+                            //Copy ảnh ra thư mục external thì các app khác mới có thể truy cập vào ảnh
+                            File imgPathExternal = new File(db.copyImgShare(pathImgShare));
+                            imageUris.add(Uri.fromFile(imgPathExternal));
+                            Intent shareIntent = new Intent();
+                            shareIntent.setAction(Intent.ACTION_SEND);
+                            shareIntent.putExtra(Intent.EXTRA_STREAM,imageUris.get(0));
+//                        shareIntent.putParcelableArrayListExtra(Intent.EXTRA_STREAM, imageUris);
+                            shareIntent.setType("image/*");
+                            activity.startActivity(Intent.createChooser(shareIntent, "Share images to.."));
+                        }else {
+                            Toast.makeText(activity, "Không có nội dung để share", Toast.LENGTH_SHORT).show();
+                        }
+
+//                        Toast.makeText(getActivity(), "This function can't use in this version", Toast.LENGTH_SHORT).show();
                         rlFloatOption.setVisibility(View.GONE);
                         tvFuntion.setVisibility(View.GONE);
                         break;
@@ -331,15 +367,28 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
                         alertDialog.setButton(DialogInterface.BUTTON_POSITIVE, "Yes", new DialogInterface.OnClickListener() {
                             @Override
                             public void onClick(DialogInterface dialogInterface, int i) {
-                                String noteTitleDelete = cursor.getString(DatabaseManagerCopyDb.COLUMN_TITLE_NOTE);
-                                String noteContentDelete = cursor.getString(DatabaseManagerCopyDb.COLUMN_CONTENT_NOTE);
-                                String noteImg = cursor.getString(DatabaseManagerCopyDb.COLUMN_PATH_IMAGE_NOTE);
-                                String noteThumbnail = cursor.getString(DatabaseManagerCopyDb.COLUMN_PATH_THUMBNAIL_IMAGE_NOTE);
-                                String typeSave = cursor.getString(DatabaseManagerCopyDb.COLUMN_TYPE_SAVE);
-                                String latlong = cursor.getString(DatabaseManagerCopyDb.COLUMN_LATLONG);
-                                String alarm = cursor.getString(DatabaseManagerCopyDb.COLUMN_ALARM);
-                                String wifiName = cursor.getString(DatabaseManagerCopyDb.COLUMN_WIFI_NAME);
+                                String noteTitleDelete = cursor.getString(DatabaseManager.COLUMN_TITLE_NOTE);
+                                String noteContentDelete = cursor.getString(DatabaseManager.COLUMN_CONTENT_NOTE);
+                                String noteImg = cursor.getString(DatabaseManager.COLUMN_PATH_IMAGE_NOTE);
+                                String noteThumbnail = cursor.getString(DatabaseManager.COLUMN_PATH_THUMBNAIL_IMAGE_NOTE);
+                                String typeSave = cursor.getString(DatabaseManager.COLUMN_TYPE_SAVE);
+                                String latlong = cursor.getString(DatabaseManager.COLUMN_LATLONG);
+                                String alarm = cursor.getString(DatabaseManager.COLUMN_ALARM);
+                                String wifiName = cursor.getString(DatabaseManager.COLUMN_WIFI_NAME);
+
+                                Log.d(TAG, "onClick: Before size: "+((ArrayList)recycleNoteAdapter.getArrData()).size());
+
+                                //del trong mảng
+//                                ((ArrayList)recycleNoteAdapter.getArrData()).remove(positionCurrentItem);
+
+                                //del trong csdl
                                 ((MainActivity) getActivity()).deleteDb(noteTitleDelete, noteContentDelete, noteImg, noteThumbnail, typeSave, latlong, alarm, wifiName);
+
+                                Log.d(TAG, "onClick: After size: "+((ArrayList)recycleNoteAdapter.getArrData()).size());
+
+//                                recycleNoteAdapter.notifyItemRemoved(positionCurrentItem);
+                                typeSavePara = ((MainActivity) getActivity()).getTypeSave();
+                                initSnipper();
                                 alertDialog.dismiss();
                             }
                         });
@@ -356,7 +405,7 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
                         break;
                     case BUTTON_SAVE:
                         cursor.moveToPosition(positionCurrentItem);
-                        String pathImage = cursor.getString(DatabaseManagerCopyDb.COLUMN_PATH_IMAGE_NOTE);
+                        String pathImage = cursor.getString(DatabaseManager.COLUMN_PATH_IMAGE_NOTE);
                         db.exportImageToExternal(pathImage);
                         rlFloatOption.setVisibility(View.GONE);
                         tvFuntion.setVisibility(View.GONE);
@@ -378,27 +427,33 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
     /**
      * Lọc ra các loại type tồn tại
      */
-    private void initSnipper() {
+    public void initSnipper() {
+        Log.d(TAG, "initSnipper: initLại");
         ArrayList<String> arrNoteType = new ArrayList<>();
         arrNoteType.add("All");
         tvCountNote.setText("" + allCursor.getCount());
         int countTypeScreenShot = 0, countTypeCapture = 0, countTypeClipboard = 0, countTypeGallery = 0, countTypeTextOnly = 0;
+
+        if(allCursor.isClosed()){
+            allCursor = db.readAllDataWithColumnTypeSave("All");
+        }
+
         for (allCursor.moveToFirst(); !allCursor.isAfterLast(); allCursor.moveToNext()) {
-            String typeSave = allCursor.getString(DatabaseManagerCopyDb.COLUMN_TYPE_SAVE);
+            String typeSave = allCursor.getString(DatabaseManager.COLUMN_TYPE_SAVE);
             switch (typeSave) {
-                case DatabaseManagerCopyDb.TYPE_SCREEN_SHOT:
+                case DatabaseManager.TYPE_SCREEN_SHOT:
                     countTypeScreenShot += 1;
                     break;
-                case DatabaseManagerCopyDb.TYPE_CAPTURE:
+                case DatabaseManager.TYPE_CAPTURE:
                     countTypeCapture += 1;
                     break;
-                case DatabaseManagerCopyDb.TYPE_CLIP_BOARD:
+                case DatabaseManager.TYPE_CLIP_BOARD:
                     countTypeClipboard += 1;
                     break;
-                case DatabaseManagerCopyDb.TYPE_GALLERY:
+                case DatabaseManager.TYPE_GALLERY:
                     countTypeGallery += 1;
                     break;
-                case DatabaseManagerCopyDb.TYPE_TEXT_ONLY:
+                case DatabaseManager.TYPE_TEXT_ONLY:
                     countTypeTextOnly += 1;
                     break;
                 default:
@@ -412,19 +467,19 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
         String[] arrTemp = new String[arrNoteType.size()];
         for (int i = 0; i < arrNoteType.size(); i++) {
             switch (arrNoteType.get(i)) {
-                case DatabaseManagerCopyDb.TYPE_SCREEN_SHOT:
+                case DatabaseManager.TYPE_SCREEN_SHOT:
                     arrTemp[i] = arrNoteType.get(i) + "(" + countTypeScreenShot + ")";
                     break;
-                case DatabaseManagerCopyDb.TYPE_CAPTURE:
+                case DatabaseManager.TYPE_CAPTURE:
                     arrTemp[i] = arrNoteType.get(i) + "(" + countTypeCapture + ")";
                     break;
-                case DatabaseManagerCopyDb.TYPE_CLIP_BOARD:
+                case DatabaseManager.TYPE_CLIP_BOARD:
                     arrTemp[i] = arrNoteType.get(i) + "(" + countTypeClipboard + ")";
                     break;
-                case DatabaseManagerCopyDb.TYPE_GALLERY:
+                case DatabaseManager.TYPE_GALLERY:
                     arrTemp[i] = arrNoteType.get(i) + "(" + countTypeGallery + ")";
                     break;
-                case DatabaseManagerCopyDb.TYPE_TEXT_ONLY:
+                case DatabaseManager.TYPE_TEXT_ONLY:
                     arrTemp[i] = arrNoteType.get(i) + "(" + countTypeTextOnly + ")";
                     break;
                 default:
@@ -435,15 +490,24 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
         SpinnerAdapterTypeSave spinnerAdapterTypeSave = new SpinnerAdapterTypeSave(getActivity(), android.R.layout.simple_spinner_dropdown_item, arrNoteType);
         spinner = (Spinner) rootView.findViewById(R.id.sp_title_action_bar);
 
-        if (!activity.showArrayWifiDetect()) {
+        if (!activity.showArrayNoteDetect()) {
+            Log.d(TAG, "initSnipper: typeSavePara"+typeSavePara);
             Log.d(TAG, "initSnipper: Vào");
             spinner.setAdapter(spinnerAdapterTypeSave);
             spinner.setSelection(arrNoteType.indexOf(typeSavePara));
-        } else {
-            arrNoteType.add(DatabaseManagerCopyDb.TYPE_WIFI_AVAILABLE);
-            spinnerAdapterTypeSave = new SpinnerAdapterTypeSave(getActivity(), android.R.layout.simple_spinner_dropdown_item, arrNoteType);
-            spinner.setAdapter(spinnerAdapterTypeSave);
-            spinner.setSelection(arrNoteType.indexOf(DatabaseManagerCopyDb.TYPE_WIFI_AVAILABLE));
+        }
+        else {
+            if(!typeNameOfWifi.equals("")){
+                arrNoteType.add(DatabaseManager.TYPE_WIFI_AVAILABLE);
+                spinnerAdapterTypeSave = new SpinnerAdapterTypeSave(getActivity(), android.R.layout.simple_spinner_dropdown_item, arrNoteType);
+                spinner.setAdapter(spinnerAdapterTypeSave);
+                spinner.setSelection(arrNoteType.indexOf(DatabaseManager.TYPE_WIFI_AVAILABLE));
+            }else if(!typeNameGps.equals("")){
+                arrNoteType.add(DatabaseManager.TYPE_GPS_AVAILABLE);
+                spinnerAdapterTypeSave = new SpinnerAdapterTypeSave(getActivity(), android.R.layout.simple_spinner_dropdown_item, arrNoteType);
+                spinner.setAdapter(spinnerAdapterTypeSave);
+                spinner.setSelection(arrNoteType.indexOf(DatabaseManager.TYPE_GPS_AVAILABLE));
+            }
         }
 
 
@@ -452,8 +516,9 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
             public void onItemSelected(AdapterView<?> adapterView, View view, int i, long l) {
                 String type = adapterView.getItemAtPosition(i).toString();//Không trả về tên wifi hiện giờ mà trả về DatabaseManagerCopyDb.TYPE_WIFI_AVAILABLE
                 switch (type) {
-                    case DatabaseManagerCopyDb.TYPE_CAPTURE:
-                        typeWifi="";//Lúc refresh k bị refresh vào arrayWifi
+                    case DatabaseManager.TYPE_CAPTURE:
+                        typeNameOfWifi ="";//Lúc refresh k bị refresh vào arrayWifi
+                        typeNameGps ="";//Lúc refresh k bị refresh vào arrayGps
                         sharedPreferences.edit().putString(KEY_TYPE_SAVE, type).apply();//Khi Chụp hoặc lưu ảnh mới sẽ mở lại type cũ lên
                         cursor = activity.swapDb(type);
                         recycleNoteAdapter.swapDataUseCursor(cursor);
@@ -461,8 +526,9 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
 
 //                        ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
                         break;
-                    case DatabaseManagerCopyDb.TYPE_CLIP_BOARD:
-                        typeWifi="";//Lúc refresh k bị refresh vào arrayWifi
+                    case DatabaseManager.TYPE_CLIP_BOARD:
+                        typeNameOfWifi ="";//Lúc refresh k bị refresh vào arrayWifi
+                        typeNameGps ="";//Lúc refresh k bị refresh vào arrayGps
                         // TODO: 9/20/2016 ---Done---Hiển thị thiếu clipboard
                         sharedPreferences.edit().putString(KEY_TYPE_SAVE, type).apply();
                         cursor = activity.swapDb(type);
@@ -470,24 +536,27 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
                         tvCountNote.setText("" + cursor.getCount());
 //                        ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
                         break;
-                    case DatabaseManagerCopyDb.TYPE_GALLERY:
-                        typeWifi="";//Lúc refresh k bị refresh vào arrayWifi
+                    case DatabaseManager.TYPE_GALLERY:
+                        typeNameOfWifi ="";//Lúc refresh k bị refresh vào arrayWifi
+                        typeNameGps ="";//Lúc refresh k bị refresh vào arrayGps
                         sharedPreferences.edit().putString(KEY_TYPE_SAVE, type).apply();
                         cursor = activity.swapDb(type);
                         recycleNoteAdapter.swapDataUseCursor(cursor);
                         tvCountNote.setText("" + cursor.getCount());
 //                        ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
                         break;
-                    case DatabaseManagerCopyDb.TYPE_SCREEN_SHOT:
-                        typeWifi="";//Lúc refresh k bị refresh vào arrayWifi
+                    case DatabaseManager.TYPE_SCREEN_SHOT:
+                        typeNameOfWifi ="";//Lúc refresh k bị refresh vào arrayWifi
+                        typeNameGps ="";//Lúc refresh k bị refresh vào arrayGps
                         sharedPreferences.edit().putString(KEY_TYPE_SAVE, type).apply();
                         cursor = activity.swapDb(type);
                         recycleNoteAdapter.swapDataUseCursor(cursor);
                         tvCountNote.setText("" + cursor.getCount());
 //                        ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
                         break;
-                    case DatabaseManagerCopyDb.TYPE_TEXT_ONLY:
-                        typeWifi="";//Lúc refresh k bị refresh vào arrayWifi
+                    case DatabaseManager.TYPE_TEXT_ONLY:
+                        typeNameOfWifi ="";//Lúc refresh k bị refresh vào arrayWifi
+                        typeNameGps ="";//Lúc refresh k bị refresh vào arrayGps
                         sharedPreferences.edit().putString(KEY_TYPE_SAVE, type).apply();
                         cursor = activity.swapDb(type);
                         recycleNoteAdapter.swapDataUseCursor(cursor);
@@ -495,31 +564,30 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
 //                        ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
                         break;
                     case "All":
-                        typeWifi="";//Lúc refresh k bị refresh vào arrayWifi
+                        typeNameOfWifi ="";//Lúc refresh k bị refresh vào arrayWifi
+                        typeNameGps ="";//Lúc refresh k bị refresh vào arrayGps
                         sharedPreferences.edit().putString(KEY_TYPE_SAVE, "All").apply();
                         cursor = activity.swapDb("All");
                         recycleNoteAdapter.swapDataUseCursor(cursor);
                         tvCountNote.setText("" + cursor.getCount());
 //                        ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
                         break;
-
-                    case DatabaseManagerCopyDb.TYPE_WIFI_AVAILABLE:
-                        if(typeWifi.equals(FragmentMain.KEY_TYPE_SAVE)){
-                            tempNameOfWifi = activity.getTypeSave();//Backup tạm tên wifi hiện giờ sử dụng sharePre ra ngoài để lúc select lại còn get được
-                            recycleNoteAdapter.swapDataUseCursor(db.readAllDataWithColumnWifiName(tempNameOfWifi));
+                    case DatabaseManager.TYPE_WIFI_AVAILABLE:
+                            typeNameOfWifi = sharedPreferences.getString(WIFI_NAME,null);//Backup tạm tên wifi hiện giờ sử dụng sharePre ra ngoài để lúc select lại còn get được
+                            recycleNoteAdapter.swapDataUseCursor(db.readAllDataWithColumnWifiName(typeNameOfWifi));
                             tvCountNote.setText("" + rcv.getAdapter().getItemCount());
-                            sharedPreferences.edit().putString(KEY_TYPE_SAVE, tempNameOfWifi).apply();
-                            Log.d(TAG, "onItemSelected: tempNameOfWifi: "+tempNameOfWifi);
-                        }else {
-                            typeWifi= tempNameOfWifi;//restore lại tên dể load lại array từ database
-                            recycleNoteAdapter.swapDataUseCursor(db.readAllDataWithColumnWifiName(typeWifi));
-                            tvCountNote.setText("" + rcv.getAdapter().getItemCount());
-                            sharedPreferences.edit().putString(KEY_TYPE_SAVE, typeWifi).apply();
-                            Log.d(TAG, "onItemSelected: tempNameOfWifi: "+typeWifi);
-                        }
+                            Log.d(TAG, "onItemSelected: typeNameOfWifi: "+ typeNameOfWifi);
                         Log.d(TAG, "onItemSelected: có comit mà");
 //                        ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
                         break;
+                    case DatabaseManager.TYPE_GPS_AVAILABLE:
+                            typeNameGps = sharedPreferences.getString(GPS_NAME,null);//Backup tạm tên wifi hiện giờ sử dụng sharePre ra ngoài để lúc select lại còn get được
+                            recycleNoteAdapter.swapDataUseArray(db.readDataWithLocation(typeNameGps.split(",")[0],typeNameGps.split(",")[1]));
+                            tvCountNote.setText("" + rcv.getAdapter().getItemCount());
+                            Log.d(TAG, "onItemSelected: typeNameGps: "+ typeNameGps);
+//                        ((TextView) spinner.getRootView().findViewById(R.id.tv_type_save)).setText(type + " ( " + cursor.getCount() + " ) ");
+                        break;
+
                     default:
                         break;
                 }
@@ -754,6 +822,10 @@ public class FragmentMain extends Fragment implements View.OnClickListener {
 
     /**Để phân biệt readDataWithWifi hay readDataWithTypeSave lúc refresh*/
     public void setTypeWifi(String typeWifi) {
-        this.typeWifi = typeWifi;
+        typeNameOfWifi = typeWifi;
+    }
+
+    public void setTypeGps(String gps){
+        typeNameGps = gps;
     }
 }

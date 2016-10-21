@@ -4,6 +4,6 @@
     >
     <size android:height="32dp"
         android:width="32dp"/>
-    <solid android:color="@color/text_light"/>
+    <solid android:color="@color/primaryText"/>
 
 </shape>

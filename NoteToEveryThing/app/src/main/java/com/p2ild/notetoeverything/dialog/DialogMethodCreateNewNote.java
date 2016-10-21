@@ -8,7 +8,7 @@ import android.graphics.drawable.ColorDrawable;
 import android.view.View;
 import android.view.Window;
 
-import com.p2ild.notetoeverything.DatabaseManagerCopyDb;
+import com.p2ild.notetoeverything.DatabaseManager;
 import com.p2ild.notetoeverything.R;
 import com.p2ild.notetoeverything.activity.MainActivity;
 
@@ -43,7 +43,7 @@ public class DialogMethodCreateNewNote extends Dialog implements View.OnClickLis
                 dismiss();
                 break;
             case R.id.iv_text_only:
-                ((MainActivity)activity).showFrgAddNote("","", DatabaseManagerCopyDb.TYPE_TEXT_ONLY);
+                ((MainActivity)activity).showFrgAddNote("","", DatabaseManager.TYPE_TEXT_ONLY);
                 dismiss();
                 break;
 

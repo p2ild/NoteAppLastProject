@@ -2,10 +2,13 @@
 
     <!-- Base application theme. -->
     <style name="AppThem" parent="Theme.AppCompat.Light.NoActionBar">
-        <item name="colorPrimaryDark">@color/color_action_bar</item>
+        <item name="colorPrimaryDark">@color/color_status_bar</item>
         <item name="colorPrimary">@color/color_task</item>
+        <item name="colorAccent">@color/accent</item>
         <item name="android:windowNoTitle">true</item>
     </style>
 
-    <color name="color_task">#4A148C</color>
+    <color name="color_status_bar">#9E9E9E</color>
+    <color name="color_task">#1565C0</color>
+    <color name="accent">#7C4DFF</color>
 </resources>

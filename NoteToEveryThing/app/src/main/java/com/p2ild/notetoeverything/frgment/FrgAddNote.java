@@ -8,11 +8,8 @@ import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.location.Location;
 import android.location.LocationManager;
-import android.net.ConnectivityManager;
-import android.net.NetworkInfo;
 import android.os.Bundle;
 import android.provider.Settings;
-import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
@@ -28,9 +25,8 @@ import com.bumptech.glide.Glide;
 import com.p2ild.notetoeverything.R;
 import com.p2ild.notetoeverything.activity.MainActivity;
 import com.p2ild.notetoeverything.locationmanager.DetectGps;
-import com.p2ild.notetoeverything.locationmanager.WifiGpsManager;
+import com.p2ild.notetoeverything.locationmanager.MapManager;
 import com.p2ild.notetoeverything.observer.DetectGpsListioner;
-import com.p2ild.notetoeverything.service.AppService;
 
 import java.io.File;
 import java.util.Locale;
@@ -102,7 +98,7 @@ public class FrgAddNote extends Fragment implements View.OnTouchListener, Detect
         } else {
             network = new DetectGps(getActivity(), this);
             gps = new DetectGps(getActivity(), this);
-            location = WifiGpsManager.getLocation(getActivity(), network, gps);
+            location = MapManager.getLocation(getActivity(), network, gps);
         }
     }
 
@@ -111,7 +107,7 @@ public class FrgAddNote extends Fragment implements View.OnTouchListener, Detect
         network = new DetectGps(getActivity(), this);
         gps = new DetectGps(getActivity(), this);
         if (locationManager.isProviderEnabled(LocationManager.GPS_PROVIDER)) {
-            location = WifiGpsManager.getLocation(getActivity(), network, gps);
+            location = MapManager.getLocation(getActivity(), network, gps);
         }
         progressBar.setVisibility(View.VISIBLE);
         super.onResume();
@@ -171,7 +167,6 @@ public class FrgAddNote extends Fragment implements View.OnTouchListener, Detect
                     } else {
                         Toast.makeText(getActivity(), "Chưa xác định được vị trí của bạn ", Toast.LENGTH_SHORT).show();
                     }
-
                     ((MainActivity) getActivity()).insertToDataBase(getNoteTitle(), getNoteContent(), imgPath, imgThumbnailPath, typeSave, latlong);
                     break;
                 }
@@ -180,6 +175,8 @@ public class FrgAddNote extends Fragment implements View.OnTouchListener, Detect
                     edNoteContent.setFocusable(false);
                     im.hideSoftInputFromWindow(edNoteTitle.getWindowToken(), 0);
                     im.hideSoftInputFromWindow(edNoteContent.getWindowToken(), 0);
+                    new File(imgPath).delete();
+                    new File(imgThumbnailPath).delete();
                     ((MainActivity) getActivity()).onBackPressed();
                     break;
                 }

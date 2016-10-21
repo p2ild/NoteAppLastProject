@@ -14,7 +14,8 @@ import android.widget.ImageView;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.p2ild.notetoeverything.DatabaseManagerCopyDb;
+import com.bumptech.glide.load.engine.DiskCacheStrategy;
+import com.p2ild.notetoeverything.DatabaseManager;
 import com.p2ild.notetoeverything.R;
 
 import java.io.File;
@@ -35,7 +36,8 @@ public class RecycleNoteAdapter extends RecyclerView.Adapter<RecycleNoteAdapter.
     private Bitmap bitmap;
     private ArrayList<NoteItem> data;
     private Bitmap bitmapOri;
-    public static final int[] placeHolderColor = {R.drawable.placeholder_greensea, R.drawable.placeholder_pomegranate, R.drawable.placeholder_wisteria, R.drawable.placeholder_nephretis};
+//    public static final int[] placeHolderColor = {R.drawable.placeholder_primary, R.drawable.placeholder_primary, R.drawable.placeholder_primary, R.drawable.placeholder_primary};
+//    public static final int[] placeHolderColor = {R.drawable.placeholder_greensea, R.drawable.placeholder_pomegranate, R.drawable.placeholder_wisteria, R.drawable.placeholder_nephretis};
     private Random random = new Random();
 
     public RecycleNoteAdapter(Context context, Cursor cursor) {
@@ -43,19 +45,20 @@ public class RecycleNoteAdapter extends RecyclerView.Adapter<RecycleNoteAdapter.
         this.cursor = cursor;
 
         data = cursorToArrayList(cursor);
+        Log.d(TAG, "RecycleNoteAdapter: Here i'm here: "+data.size());
     }
 
     public static ArrayList<NoteItem> cursorToArrayList(Cursor cursor) {
         ArrayList<NoteItem> temp = new ArrayList<>();
         if (cursor.getCount() > 0) {
             for (cursor.moveToLast(); !cursor.isBeforeFirst(); cursor.moveToPrevious()) {
-                String noteTitle = cursor.getString(cursor.getColumnIndex(DatabaseManagerCopyDb.NAME_COLUMN_TITLE_NOTE));
-                String noteContent = cursor.getString(cursor.getColumnIndex(DatabaseManagerCopyDb.NAME_COLUMN_CONTENT_NOTE));
-                String notePathImg = cursor.getString(cursor.getColumnIndex(DatabaseManagerCopyDb.NAME_COLUMN_PATH_IMAGE_NOTE));
-                String notePathThumbnail = cursor.getString(cursor.getColumnIndex(DatabaseManagerCopyDb.NAME_COLUMN_PATH_THUMBNAIL_IMAGE_NOTE));
-                String noteTypeSave = cursor.getString(cursor.getColumnIndex(DatabaseManagerCopyDb.NAME_COLUMN_TYPE_SAVE));
-                String latlong = cursor.getString(cursor.getColumnIndex(DatabaseManagerCopyDb.NAME_COLUMN_LATLONG));
-                String wifiName = cursor.getString(cursor.getColumnIndex(DatabaseManagerCopyDb.NAME_COLUMN_WIFI_NAME));
+                String noteTitle = cursor.getString(cursor.getColumnIndex(DatabaseManager.NAME_COLUMN_TITLE_NOTE));
+                String noteContent = cursor.getString(cursor.getColumnIndex(DatabaseManager.NAME_COLUMN_CONTENT_NOTE));
+                String notePathImg = cursor.getString(cursor.getColumnIndex(DatabaseManager.NAME_COLUMN_PATH_IMAGE_NOTE));
+                String notePathThumbnail = cursor.getString(cursor.getColumnIndex(DatabaseManager.NAME_COLUMN_PATH_THUMBNAIL_IMAGE_NOTE));
+                String noteTypeSave = cursor.getString(cursor.getColumnIndex(DatabaseManager.NAME_COLUMN_TYPE_SAVE));
+                String latlong = cursor.getString(cursor.getColumnIndex(DatabaseManager.NAME_COLUMN_LATLONG));
+                String wifiName = cursor.getString(cursor.getColumnIndex(DatabaseManager.NAME_COLUMN_WIFI_NAME));
                 temp.add(new NoteItem(noteTitle, noteContent, notePathImg, notePathThumbnail, noteTypeSave, latlong, wifiName));
             }
         }
@@ -72,68 +75,70 @@ public class RecycleNoteAdapter extends RecyclerView.Adapter<RecycleNoteAdapter.
     public void onBindViewHolder(Holder holder, int position) {
             holder.tvTitleNote.setText(data.get(position).getNoteTitle());
             holder.tvContentNote.setText(data.get(position).getNoteContent());
-            String pathThumbnail = (data.get(position).getPathThumbnail());
+            String pathImg = (data.get(position).getPathImg());
             switch (data.get(position).getTypeSave()) {
-                case DatabaseManagerCopyDb.TYPE_CLIP_BOARD:
+                case DatabaseManager.TYPE_CLIP_BOARD:
                     holder.tvTitleNote.setText(holder.tvTitleNote.getText());
                     holder.tvTypeSaveItemRecycleView.setText("ClipBoard");
                     holder.imgPreview.setScaleType(ImageView.ScaleType.FIT_CENTER);
                     Glide
                             .with(context)
-                            .load(placeHolderColor[random.nextInt(4)])
-                            .placeholder(placeHolderColor[random.nextInt(4)])
+                            .load(R.drawable.placeholder_primary)
                             .fitCenter()
                             .crossFade()
-                            .thumbnail(0.5f)
                             .into(holder.imgPreview);
                     break;
-                case DatabaseManagerCopyDb.TYPE_TEXT_ONLY:
+                case DatabaseManager.TYPE_TEXT_ONLY:
                     holder.tvTitleNote.setText(holder.tvTitleNote.getText());
                     holder.tvTypeSaveItemRecycleView.setText("TextOnly");
                     holder.imgPreview.setScaleType(ImageView.ScaleType.FIT_CENTER);
                     Glide
                             .with(context)
-                            .load(placeHolderColor[random.nextInt(4)])
-                            .placeholder(placeHolderColor[random.nextInt(4)])
+                            .load(R.drawable.placeholder_primary)
                             .crossFade()
                             .fitCenter()
-                            .thumbnail(0.5f)
                             .into(holder.imgPreview);
                     break;
-                case DatabaseManagerCopyDb.TYPE_CAPTURE:
+                case DatabaseManager.TYPE_CAPTURE:
                     holder.tvTitleNote.setText(holder.tvTitleNote.getText());
                     holder.tvTypeSaveItemRecycleView.setText("");
+                    holder.imgPreview.setScaleType(ImageView.ScaleType.CENTER);
                     Glide
                             .with(context)
-                            .load(new File(pathThumbnail))
+                            .load(new File(pathImg))
                             .placeholder(R.drawable.placeholder)
                             .crossFade()
-                            .fitCenter()
-                            .thumbnail(0.5f)
+//                            .fitCenter()
+                            .diskCacheStrategy(DiskCacheStrategy.NONE)
+//                            .thumbnail(0.1f)
+                            .override(200,300)
                             .into(holder.imgPreview);
                     break;
-                case DatabaseManagerCopyDb.TYPE_GALLERY:
+                case DatabaseManager.TYPE_GALLERY:
                     holder.tvTitleNote.setText(holder.tvTitleNote.getText());
                     holder.tvTypeSaveItemRecycleView.setText("");
+                    holder.imgPreview.setScaleType(ImageView.ScaleType.CENTER);
                     Glide
                             .with(context)
-                            .load(new File(pathThumbnail))
+                            .load(new File(pathImg))
                             .placeholder(R.drawable.placeholder)
                             .crossFade()
-                            .fitCenter()
-                            .thumbnail(0.5f)
+//                            .fitCenter()
+                            .override(400,600)
                             .into(holder.imgPreview);
                     break;
-                case DatabaseManagerCopyDb.TYPE_SCREEN_SHOT:
+                case DatabaseManager.TYPE_SCREEN_SHOT:
                     holder.tvTitleNote.setText(holder.tvTitleNote.getText());
                     holder.tvTypeSaveItemRecycleView.setText("");
+                    holder.imgPreview.setScaleType(ImageView.ScaleType.CENTER);
+                    Log.d(TAG, "onBindViewHolder: "+pathImg);
                     Glide
                             .with(context)
-                            .load(new File(pathThumbnail))
+                            .load(new File(pathImg))
                             .placeholder(R.drawable.placeholder)
                             .crossFade()
-                            .fitCenter()
-                            .thumbnail(0.5f)
+//                            .fitCenter()
+                            .override(400,600)
                             .into(holder.imgPreview);
                 default:
                     break;

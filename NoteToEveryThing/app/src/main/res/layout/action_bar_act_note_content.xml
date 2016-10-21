@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:background="@color/color_primary_text"
+    android:background="@color/colorPrimary"
     android:orientation="vertical">
 
     <RelativeLayout
@@ -27,31 +27,21 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_centerVertical="true"
-            android:layout_toLeftOf="@+id/ib_save_activity_content"
+            android:layout_toLeftOf="@+id/ib_menu_content_note"
             android:layout_toRightOf="@id/ib_back"
             android:text="TitleNote"
             android:textAlignment="center"
-            android:textColor="@color/text_light"
+            android:textColor="@color/primaryText"
             android:textSize="20sp"
             android:textStyle="bold" />
 
         <ImageButton
-            android:id="@+id/ib_save_activity_content"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginRight="10dp"
-            android:layout_toLeftOf="@+id/ib_show_on_map"
-            android:background="@android:color/transparent"
-            android:src="@drawable/ic_save_32px" />
-
-        <ImageButton
-            android:id="@+id/ib_show_on_map"
+            android:id="@+id/ib_menu_content_note"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_alignParentRight="true"
             android:background="@android:color/transparent"
-            android:src="@drawable/ic_map_32" />
-
+            android:src="@drawable/ic_option_dot" />
 
     </RelativeLayout>
 </LinearLayout>
